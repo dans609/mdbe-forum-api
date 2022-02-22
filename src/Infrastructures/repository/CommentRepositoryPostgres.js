@@ -35,12 +35,12 @@ class CommentRepositoryPostgres extends CommentRepository {
 
   async getCommentsByThreadId(threadId) {
     const query = {
-      text: ` SELECT comments.id, comments.date, users.username,
-                CASE
-                  WHEN comments.is_deleted = TRUE
-                    THEN '**komentar telah dihapus**'
-                  ELSE comments.content
-                END AS content
+      text: ` SELECT
+                comments.id,
+                comments.content,
+                comments.date,
+                comments.is_deleted,
+                users.username
               FROM comments
               INNER JOIN users ON comments.owner = users.id
               WHERE comments.thread_id = $1
@@ -67,8 +67,7 @@ class CommentRepositoryPostgres extends CommentRepository {
     const query = {
       text: ` SELECT comments.id, threads.id
               FROM comments
-              INNER JOIN threads
-              ON comments.thread_id = threads.id
+              INNER JOIN threads ON comments.thread_id = threads.id
               WHERE comments.id = $1 AND threads.id = $2`,
       values: [commentId, threadId],
     };
@@ -83,8 +82,7 @@ class CommentRepositoryPostgres extends CommentRepository {
     const query = {
       text: ` SELECT comments.id, users.id
               FROM comments
-              INNER JOIN users
-              ON comments.owner = users.id
+              INNER JOIN users ON comments.owner = users.id
               WHERE comments.id = $1 AND users.id = $2`,
       values: [commentId, owner],
     };

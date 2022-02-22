@@ -272,92 +272,55 @@ describe('CommentRepositoryPostgres', () => {
 
     it('should correctly return detail all comments (includes deleted comment) and order comments by date (asc)', async () => {
       // Arrange
-      const responses = [
+      const user = {
+        one: { id: 'user-abc', username: 'johndoe' },
+        two: { id: 'user-123', username: 'dicoding' },
+      };
+      const threadId = 'thread-123';
+      const comments = [
         {
           id: 'comment-xxx',
           content: 'Hello world',
-          username: 'johndoe',
+          username: user.one.username,
           date: '12-30-2022',
         },
         {
           id: 'comment-abc',
           content: 'Sebuah komentar',
-          username: 'dicoding',
+          username: user.two.username,
           date: '12-28-2022',
         },
         {
           id: 'comment-123',
           content: 'Content dari komentar',
-          username: 'johndoe',
+          username: user.one.username,
           date: '12-29-2022',
         },
       ];
 
-      /* pre-requisites object to store data into database */
-      const firstUser = { id: 'user-abc', username: 'johndoe' };
-      const secondUser = { id: 'user-123', username: 'dicoding' };
-      const threadData = { id: 'thread-123', owner: secondUser.id };
-      const comment1FK = { threadId: threadData.id, owner: firstUser.id };
-      const comment2FK = { threadId: threadData.id, owner: secondUser.id };
-      const comment3FK = { threadId: threadData.id, owner: firstUser.id };
-
       /* add required data to database and create repository instance */
-      await UsersTableTestHelper.addUser({ ...firstUser });
-      await UsersTableTestHelper.addUser({ ...secondUser });
-      await ThreadsTableTestHelper.addThreads({ ...threadData });
-      await CommentsTableTestHelper.addComment({ ...comment1FK, ...responses[0] });
-      await CommentsTableTestHelper.addComment({ ...comment2FK, ...responses[1] });
-      await CommentsTableTestHelper.addComment({ ...comment3FK, ...responses[2] });
-      const commentRepoPostgres = new CommentRepositoryPostgres(pool, {}, {});
+      await UsersTableTestHelper.addUser(user.one);
+      await UsersTableTestHelper.addUser(user.two);
+      await ThreadsTableTestHelper.addThreads({ id: threadId, owner: user.two.id });
+      await CommentsTableTestHelper.addComment({ threadId, owner: user.one.id, ...comments[0] });
+      await CommentsTableTestHelper.addComment({ threadId, owner: user.two.id, ...comments[1] });
+      await CommentsTableTestHelper.addComment({ threadId, owner: user.one.id, ...comments[2] });
+      const repositoryPostgres = new CommentRepositoryPostgres(pool, {}, {});
 
       // Action
       /* random deleting comment and get all comments belong the thread */
-      await commentRepoPostgres.softDeleteById(responses[2].id);
-      const detailComment = await commentRepoPostgres.getCommentsByThreadId(threadData.id);
+      await repositoryPostgres.softDeleteById(comments[2].id);
+      const detailComment = await repositoryPostgres.getCommentsByThreadId(threadId);
 
       // Assert
-      let testSuccess = 0;
       const deletedContent = '**komentar telah dihapus**';
-
-      expect(detailComment).toHaveLength(responses.length);
-      testSuccess += 1;
-
-      detailComment.forEach((comment) => {
-        /* this test will result 1 point of each loop */
-        /* the comment length is 3, therefore the testSuccess value must be added by 3 point */
-        expect(comment).toBeInstanceOf(DetailComment);
-        testSuccess += 1;
-
-        responses.forEach((r) => {
-          switch (comment.id) {
-            case r.id:
-              /* this test will result 1 point of each loop */
-              /* comment length is 3 therefore +3 point is added to testSuccess */
-              expect(comment).toMatchObject({
-                id: r.id,
-                date: r.date,
-                username: r.username,
-              });
-              testSuccess += 1;
-
-              /* the condition/code below will result 1 point of loop */
-              /* comment length is 3 therefore +3 point is added to testSuccess */
-              if (r.id === responses[2].id) {
-                expect(comment.content).toEqual(deletedContent);
-                testSuccess += 1;
-                break;
-              }
-
-              expect(comment.content).toEqual(r.content);
-              expect(comment.content).not.toEqual(deletedContent);
-              testSuccess += 1;
-              break;
-            default:
-              break;
-          }
-        });
-      });
-      expect(testSuccess).toEqual(10);
+      expect(detailComment).toHaveLength(comments.length);
+      expect(detailComment[0]).toBeInstanceOf(DetailComment);
+      expect(detailComment[1]).toBeInstanceOf(DetailComment);
+      expect(detailComment[2]).toBeInstanceOf(DetailComment);
+      expect(detailComment[0]).toMatchObject({ ...comments[1] });
+      expect(detailComment[1]).toMatchObject({ ...comments[2], content: deletedContent });
+      expect(detailComment[2]).toMatchObject({ ...comments[0] });
     });
   });
 });
