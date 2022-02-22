@@ -22,6 +22,8 @@ describe('DeleteCommentUseCase', () => {
       .mockImplementation(() => Promise.resolve());
     mockCommentRepository.verifyCommentOwner = jest.fn()
       .mockImplementation(() => Promise.resolve());
+    mockCommentRepository.verifyCommentNotDeleted = jest.fn()
+      .mockImplementation(() => Promise.resolve());
     mockCommentRepository.softDeleteById = jest.fn()
       .mockImplementation(() => Promise.resolve());
     mockAuthManager.getTokenByHeaders = jest.fn()
@@ -47,6 +49,7 @@ describe('DeleteCommentUseCase', () => {
     expect(mockThreadRepository.verifyThreadById).toBeCalledWith(entity.threadId);
     expect(mockAuthManager.getTokenByHeaders).toBeCalledWith(entity.authToken);
     expect(mockAuthManager.decodePayload).toBeCalledWith('token-123');
+    expect(mockCommentRepository.verifyCommentNotDeleted).toBeCalledWith(entity.commentId);
     expect(mockCommentRepository.softDeleteById).toBeCalledWith(entity.commentId);
     expect(mockCommentRepository.verifyCommentByThreadId).toBeCalledWith({ ...entity });
     expect(mockCommentRepository.verifyCommentOwner).toBeCalledWith({

@@ -175,8 +175,8 @@ describe('CommentRepositoryPostgres', () => {
     });
   });
 
-  describe('softDeleteById function', () => {
-    it('should delete comment (set is_deleted to true) when id and owner is valid', async () => {
+  describe('verifyCommentNotDeleted function', () => {
+    it('shouldn\'t throw NotFoundError because the comment is verified that hasn\'t been deleted from database', async () => {
       // Arrange
       const { params, owner } = RequestTestHelper;
       await UsersTableTestHelper.addUser({ id: owner });
@@ -191,17 +191,37 @@ describe('CommentRepositoryPostgres', () => {
       const repositoryPostgres = new CommentRepositoryPostgres(pool, {}, {});
 
       // Assert
-      await expect(repositoryPostgres.softDeleteById(params.commentId))
+      await expect(repositoryPostgres.verifyCommentNotDeleted(params.commentId))
         .resolves.not.toThrow(NotFoundError);
-      expect((await CommentsTableTestHelper.findCommentById(params.commentId))[0]).toMatchObject({
-        owner,
-        id: params.commentId,
-        thread_id: params.threadId,
-        is_deleted: true,
-      });
+      await expect(repositoryPostgres.verifyCommentNotDeleted(params.commentId))
+        .resolves.toBeUndefined();
     });
 
-    it('should throw NotFoundError when multiple action executed (already deleted)', async () => {
+    it('should throw NotFoundError when comment has been deleted', async () => {
+      // Arrange
+      const { params, owner } = RequestTestHelper;
+      await UsersTableTestHelper.addUser({ id: owner });
+      await ThreadsTableTestHelper.addThreads({ id: params.threadId, owner });
+      await CommentsTableTestHelper.addComment({
+        owner,
+        isDeleted: true,
+        id: params.commentId,
+        threadId: params.threadId,
+      });
+
+      // Action
+      const repositoryPostgres = new CommentRepositoryPostgres(pool, {}, {});
+
+      // Assert
+      await expect(repositoryPostgres.verifyCommentNotDeleted(params.commentId))
+        .rejects.toThrow(NotFoundError);
+      await expect(repositoryPostgres.verifyCommentNotDeleted(params.commentId))
+        .rejects.toThrowError('komentar tidak ada atau telah dihapus');
+    });
+  });
+
+  describe('softDeleteById function', () => {
+    it('should delete comment (set is_deleted to true) when id and owner is valid and verify the action is correct', async () => {
       // Arrange
       const { params, owner } = RequestTestHelper;
       await UsersTableTestHelper.addUser({ id: owner });
@@ -214,14 +234,20 @@ describe('CommentRepositoryPostgres', () => {
 
       // Action
       const repositoryPostgres = new CommentRepositoryPostgres(pool, {}, {});
+      const softDelete = await repositoryPostgres.softDeleteById(params.commentId);
 
       // Assert
-      await expect(repositoryPostgres.softDeleteById(params.commentId))
-        .resolves.not.toThrowError(NotFoundError);
-      await expect(repositoryPostgres.softDeleteById(params.commentId))
-        .rejects.toThrow(NotFoundError);
-      await expect(repositoryPostgres.softDeleteById(params.commentId))
-        .rejects.toThrowError('komentar tidak ada atau telah dihapus');
+      const comment = await CommentsTableTestHelper.findCommentById(params.commentId);
+      expect(softDelete).toBeUndefined();
+      expect(comment).toHaveLength(1);
+      expect(comment).toMatchObject([
+        {
+          owner,
+          id: params.commentId,
+          thread_id: params.threadId,
+          is_deleted: true,
+        },
+      ]);
     });
   });
 

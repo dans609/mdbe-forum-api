@@ -25,22 +25,12 @@ class CommentRepositoryPostgres extends CommentRepository {
   }
 
   async softDeleteById(commentId) {
-    const queryObject = {
-      queryCheck: {
-        text: 'SELECT is_deleted FROM comments WHERE id = $1',
-        values: [commentId],
-      },
-      queryDelete: {
-        text: 'UPDATE comments SET is_deleted = TRUE WHERE id = $1 RETURNING is_deleted',
-        values: [commentId],
-      },
+    const query = {
+      text: 'UPDATE comments SET is_deleted = TRUE WHERE id = $1 RETURNING is_deleted',
+      values: [commentId],
     };
 
-    const result = await this._pool.query(queryObject.queryCheck);
-    const { is_deleted: isDeleted } = result.rows[0];
-    if (isDeleted) throw new NotFoundError('komentar tidak ada atau telah dihapus');
-
-    await this._pool.query(queryObject.queryDelete);
+    await this._pool.query(query);
   }
 
   async getCommentsByThreadId(threadId) {
@@ -60,6 +50,17 @@ class CommentRepositoryPostgres extends CommentRepository {
 
     const result = await this._pool.query(query);
     return result.rows.map((row) => new DetailComment({ ...row }));
+  }
+
+  async verifyCommentNotDeleted(commentId) {
+    const query = {
+      text: 'SELECT is_deleted FROM comments WHERE id = $1',
+      values: [commentId],
+    };
+
+    const result = await this._pool.query(query);
+    const { is_deleted: isDeleted } = result.rows[0];
+    if (isDeleted) throw new NotFoundError('komentar tidak ada atau telah dihapus');
   }
 
   async verifyCommentByThreadId({ commentId, threadId }) {

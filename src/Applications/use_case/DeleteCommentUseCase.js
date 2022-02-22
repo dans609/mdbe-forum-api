@@ -15,6 +15,7 @@ class DeleteCommentUseCase {
     await this._threadRepository.verifyThreadById(entity.threadId);
     await this._commentRepository.verifyCommentByThreadId({ ...entity });
     await this._commentRepository.verifyCommentOwner({ ...entity, owner: userPayload.id });
+    await this._commentRepository.verifyCommentNotDeleted(entity.commentId);
     await this._commentRepository.softDeleteById(entity.commentId);
   }
 }
