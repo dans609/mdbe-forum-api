@@ -26,14 +26,14 @@
 ~$: npm run test
 ```
 
-If you successfull to follow the instruction, you can run the test suites first to check the code is safe with this command:
+13. If you successfull to follow the instruction, you can run the test suites first to check the code is safe with this command:
 ```sh
 ~$: npm run test
 ```
 
-If all test suites is passed, try to start the service with this command:
+14. If all test suites is passed, try to start the service with this command:
 ```sh
 ~$: npm run start:dev
 ```
 
-Use Postman or whatever it is to simulate the service.
+15. Use Postman or whatever it is to simulate the service.
