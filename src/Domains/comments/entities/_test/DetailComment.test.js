@@ -80,31 +80,103 @@ describe('a DetailComment entities', () => {
       .toThrowError('DETAIL_COMMENT.IS_DELETED_NOT_MEET_DATA_TYPE_SPECIFICATION');
   });
 
-  it('should create detailComments object correctly', () => {
+  it('should create detailComments object correctly for deleted comment', () => {
+    // Arrange
+    const isDeleted = true;
+    const comment = {
+      first: {
+        id: 'comment-123',
+        content: 'sebuah komentar',
+        date: '12-29-2022',
+        username: 'dicoding',
+      },
+      second: {
+        id: 'comment-abc',
+        content: 'Content dari komentar',
+        date: '12-30-2022',
+        username: 'johndoe',
+      },
+    };
+
+    // Action
+    const firstComment = new DetailComment({ ...comment.first, is_deleted: isDeleted });
+    const secondComment = new DetailComment({ ...comment.second, is_deleted: isDeleted });
+
+    // Assert
+    const deletedContent = '**komentar telah dihapus**';
+    expect(firstComment.id).toStrictEqual('comment-123');
+    expect(firstComment.date).toStrictEqual('12-29-2022');
+    expect(firstComment.username).toStrictEqual('dicoding');
+    expect(firstComment.content).toStrictEqual(deletedContent);
+    expect(secondComment.id).toStrictEqual('comment-abc');
+    expect(secondComment.date).toStrictEqual('12-30-2022');
+    expect(secondComment.username).toStrictEqual('johndoe');
+    expect(secondComment.content).toStrictEqual(deletedContent);
+  });
+
+  it('should create detailComments object correctly for non-deleted comment', () => {
+    // Arrange
+    const isDeleted = false;
+    const comment = {
+      first: {
+        id: 'comment-123',
+        content: 'sebuah komentar',
+        date: '12-29-2022',
+        username: 'dicoding',
+      },
+      second: {
+        id: 'comment-abc',
+        content: 'Content dari komentar',
+        date: '12-30-2022',
+        username: 'johndoe',
+      },
+    };
+
+    // Action
+    const firstComment = new DetailComment({ ...comment.first, is_deleted: isDeleted });
+    const secondComment = new DetailComment({ ...comment.second, is_deleted: isDeleted });
+
+    // Assert
+    expect(firstComment.id).toStrictEqual('comment-123');
+    expect(firstComment.date).toStrictEqual('12-29-2022');
+    expect(firstComment.username).toStrictEqual('dicoding');
+    expect(firstComment.content).toStrictEqual('sebuah komentar');
+    expect(secondComment.id).toStrictEqual('comment-abc');
+    expect(secondComment.date).toStrictEqual('12-30-2022');
+    expect(secondComment.username).toStrictEqual('johndoe');
+    expect(secondComment.content).toStrictEqual('Content dari komentar');
+  });
+
+  it('should create detailComments object correctly for deleted and non-deleted comment', () => {
     // Arrange
     const comment = {
       first: {
         id: 'comment-123',
         content: 'sebuah komentar',
-        date: '12-29-2020',
+        date: '12-29-2022',
         username: 'dicoding',
-        is_deleted: false,
       },
       second: {
         id: 'comment-abc',
-        content: '**komentar telah dihapus**',
-        date: '12-30-2020',
+        content: 'Content dari komentar',
+        date: '12-30-2022',
         username: 'johndoe',
-        is_deleted: true,
       },
     };
 
     // Action
-    const firstComment = new DetailComment(comment.first);
-    const secondComment = new DetailComment(comment.second);
+    const firstComment = new DetailComment({ ...comment.first, is_deleted: false });
+    const secondComment = new DetailComment({ ...comment.second, is_deleted: true });
 
     // Assert
-    expect(firstComment).toStrictEqual(new DetailComment({ ...comment.first }));
-    expect(secondComment).toStrictEqual(new DetailComment({ ...comment.second }));
+    const deletedComment = '**komentar telah dihapus**';
+    expect(firstComment.id).toStrictEqual('comment-123');
+    expect(firstComment.date).toStrictEqual('12-29-2022');
+    expect(firstComment.username).toStrictEqual('dicoding');
+    expect(firstComment.content).toStrictEqual('sebuah komentar');
+    expect(secondComment.id).toStrictEqual('comment-abc');
+    expect(secondComment.date).toStrictEqual('12-30-2022');
+    expect(secondComment.username).toStrictEqual('johndoe');
+    expect(secondComment.content).toStrictEqual(deletedComment);
   });
 });
