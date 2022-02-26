@@ -4,10 +4,10 @@ describe('a PostThread entities', () => {
   it('should throw error when payload did not contain needed property', () => {
     // Arrange
     const payload = { title: 'Thread Title' };
-    const headers = { authorization: 'Bearer token-123' };
+    const userId = 'user-123';
 
     // Action and Assert
-    expect(() => new PostThread(payload, headers)).toThrowError('POST_THREAD.PAYLOAD_NOT_CONTAIN_NEEDED_PROPERTY');
+    expect(() => new PostThread(payload, userId)).toThrowError('POST_THREAD.PAYLOAD_NOT_CONTAIN_NEEDED_PROPERTY');
   });
 
   it('should throw error when headers did not contain needed property', () => {
@@ -29,23 +29,23 @@ describe('a PostThread entities', () => {
   it('should throw error when headers did not meet data type specification', () => {
     // Arrange
     const payload = { title: 'Thread Title', body: 'Thread body' };
-    const headers = { authorization: true };
+    const userId = true;
 
     // Action and Assert
-    expect(() => new PostThread(payload, headers.authorization)).toThrowError('POST_THREAD.HEADERS_NOT_MEET_DATA_TYPE_SPECIFICATION');
+    expect(() => new PostThread(payload, userId)).toThrowError('POST_THREAD.HEADERS_NOT_MEET_DATA_TYPE_SPECIFICATION');
   });
 
   it('should post thread object correctly', () => {
     // Arrange
     const payload = { title: 'Thread Title', body: 'Thread body' };
-    const headers = { authorization: 'Bearer token-123' };
+    const auth = { credentials: { id: 'user-123' } };
 
     // Action
-    const { title, body, authToken } = new PostThread(payload, headers.authorization);
+    const { title, body, userId } = new PostThread(payload, auth.credentials.id);
 
     // Assert
     expect(title).toEqual(payload.title);
     expect(body).toEqual(payload.body);
-    expect(authToken).toEqual(headers.authorization);
+    expect(userId).toEqual(auth.credentials.id);
   });
 });

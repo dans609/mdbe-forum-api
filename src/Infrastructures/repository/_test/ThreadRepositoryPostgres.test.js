@@ -22,16 +22,16 @@ describe('ThreadRepositoryPostgres', () => {
     it('should persist post thread', async () => {
       // Arrange
       await UsersTableTestHelper.addUser({ username: 'dicoding' });
-      const payload = { id: 'user-123', title: 'Thread Title', body: 'Thread body' };
-      const headers = { authorization: 'Bearer token-123' };
-      const postThread = new PostThread(payload, headers.authorization);
+      const payload = { title: 'Thread Title', body: 'Thread body' };
+      const userId = 'user-123';
+      const postThread = new PostThread(payload, userId);
 
       function date() { this.toISOString = () => '12-30-2022'; }
       const fakeIdGenerator = () => '123';
       const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, date, fakeIdGenerator);
 
       // Action
-      await threadRepositoryPostgres.addThread({ ...postThread, owner: payload.id });
+      await threadRepositoryPostgres.addThread({ ...postThread, owner: userId });
 
       // Assert
       const threads = await ThreadsTableTestHelper.findThreadById('thread-123');
@@ -41,9 +41,9 @@ describe('ThreadRepositoryPostgres', () => {
     it('should return posted thread correctly', async () => {
       // Arrange
       await UsersTableTestHelper.addUser({ username: 'dicoding' });
-      const payload = { id: 'user-123', title: 'Thread Title', body: 'Thread body' };
-      const headers = { authorization: 'Bearer token-123' };
-      const postThread = new PostThread(payload, headers.authorization);
+      const payload = { title: 'Thread Title', body: 'Thread body' };
+      const userId = 'user-123';
+      const postThread = new PostThread(payload, userId);
 
       function date() { this.toISOString = () => '12-30-2022'; }
       const fakeIdGenerator = () => '123';
@@ -51,7 +51,7 @@ describe('ThreadRepositoryPostgres', () => {
 
       // Action
       const postedThread = await threadRepositoryPostgres.addThread({
-        ...postThread, owner: payload.id,
+        ...postThread, owner: userId,
       });
 
       // Assert
