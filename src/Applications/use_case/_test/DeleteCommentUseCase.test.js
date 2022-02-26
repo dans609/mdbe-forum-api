@@ -8,7 +8,7 @@ describe('DeleteCommentUseCase', () => {
   it('should orchestrating soft delete comment action correctly', async () => {
     // Arrange
     const params = { threadId: 'thread-123', commentId: 'comment-123' };
-    const headers = { authorization: 'Bearer token-123' };
+    const userId = 'user-123';
 
     /* creating dependency for the use case */
     const mockCommentRepository = new CommentRepository();
@@ -26,13 +26,6 @@ describe('DeleteCommentUseCase', () => {
       .mockImplementation(() => Promise.resolve());
     mockCommentRepository.softDeleteById = jest.fn()
       .mockImplementation(() => Promise.resolve());
-    mockAuthManager.getTokenByHeaders = jest.fn()
-      .mockImplementation(() => Promise.resolve('token-123'));
-    mockAuthManager.decodePayload = jest.fn()
-      .mockImplementation(() => Promise.resolve({
-        id: 'user-123',
-        username: 'dicoding',
-      }));
 
     /* creating use case instance */
     const deleteCommentUseCase = new DeleteCommentUseCase({
@@ -42,19 +35,14 @@ describe('DeleteCommentUseCase', () => {
     });
 
     // Action
-    const entity = new DeleteComment(params, headers.authorization);
-    await deleteCommentUseCase.execute({ ...params }, headers.authorization);
+    const entity = new DeleteComment(params, userId);
+    await deleteCommentUseCase.execute(params, userId);
 
     // Assert
     expect(mockThreadRepository.verifyThreadById).toBeCalledWith(entity.threadId);
-    expect(mockAuthManager.getTokenByHeaders).toBeCalledWith(entity.authToken);
-    expect(mockAuthManager.decodePayload).toBeCalledWith('token-123');
+    expect(mockCommentRepository.verifyCommentByThreadId).toBeCalledWith({ ...entity });
+    expect(mockCommentRepository.verifyCommentOwner).toBeCalledWith({ ...entity });
     expect(mockCommentRepository.verifyCommentNotDeleted).toBeCalledWith(entity.commentId);
     expect(mockCommentRepository.softDeleteById).toBeCalledWith(entity.commentId);
-    expect(mockCommentRepository.verifyCommentByThreadId).toBeCalledWith({ ...entity });
-    expect(mockCommentRepository.verifyCommentOwner).toBeCalledWith({
-      ...entity,
-      owner: 'user-123',
-    });
   });
 });

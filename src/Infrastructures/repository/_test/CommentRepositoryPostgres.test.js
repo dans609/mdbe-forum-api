@@ -4,6 +4,7 @@ const RequestTestHelper = require('../../../../tests/RequestTestHelper');
 const CommentsTableTestHelper = require('../../../../tests/CommentsTableTestHelper');
 const PostComment = require('../../../Domains/comments/entities/PostComment');
 const PostedComment = require('../../../Domains/comments/entities/PostedComment');
+const DeleteComment = require('../../../Domains/comments/entities/DeleteComment');
 const DetailComment = require('../../../Domains/comments/entities/DetailComment');
 const AuthorizationError = require('../../../Commons/exceptions/AuthorizationError');
 const NotFoundError = require('../../../Commons/exceptions/NotFoundError');
@@ -34,18 +35,17 @@ describe('CommentRepositoryPostgres', () => {
   describe('addComment function', () => {
     it('should persist post comment in database', async () => {
       // Arrange
-      const requestHelper = RequestTestHelper;
-      const headerAuth = requestHelper.headers.authorization;
-      const postComment = new PostComment({ ...requestHelper }, headerAuth);
-      await UsersTableTestHelper.addUser({ username: 'dicoding' });
-      await ThreadsTableTestHelper.addThreads({ id: requestHelper.params.threadId });
+      const { payload, params, owner } = RequestTestHelper;
+      const postComment = new PostComment({ payload, params }, owner);
+      await UsersTableTestHelper.addUser({ username: 'dicoding', id: owner });
+      await ThreadsTableTestHelper.addThreads({ id: params.threadId, owner });
 
       function date() { this.toISOString = () => '12-30-2022'; }
       const fakeIdGenerator = () => '123';
       const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, date, fakeIdGenerator);
 
       // Action
-      await commentRepositoryPostgres.addComment({ ...postComment, owner: requestHelper.owner });
+      await commentRepositoryPostgres.addComment({ ...postComment });
 
       // Assert
       const comments = await CommentsTableTestHelper.findCommentById('comment-123');
@@ -54,26 +54,23 @@ describe('CommentRepositoryPostgres', () => {
 
     it('should return posted comment correctly', async () => {
       // Arrange
-      const requestHelper = RequestTestHelper;
-      const headerAuth = requestHelper.headers.authorization;
-      const postComment = new PostComment({ ...requestHelper }, headerAuth);
-      await UsersTableTestHelper.addUser({ username: 'dicoding' });
-      await ThreadsTableTestHelper.addThreads({ id: requestHelper.params.threadId });
+      const { payload, params, owner } = RequestTestHelper;
+      const postComment = new PostComment({ payload, params }, owner);
+      await UsersTableTestHelper.addUser({ username: 'dicoding', id: owner });
+      await ThreadsTableTestHelper.addThreads({ id: params.threadId, owner });
 
       function date() { this.toISOString = () => '12-30-2022'; }
       const fakeIdGenerator = () => '123';
       const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, date, fakeIdGenerator);
 
       // Action
-      const postedComment = await commentRepositoryPostgres.addComment({
-        ...postComment, owner: requestHelper.owner,
-      });
+      const postedComment = await commentRepositoryPostgres.addComment({ ...postComment });
 
       // Assert
       expect(postedComment).toStrictEqual(new PostedComment({
         id: 'comment-123',
-        content: requestHelper.payload.content,
-        owner: requestHelper.owner,
+        content: payload.content,
+        owner,
       }));
     });
   });
@@ -138,11 +135,8 @@ describe('CommentRepositoryPostgres', () => {
       });
 
       // Action
+      const errorRequestPayload = { ...params, owner: 'user-abc' };
       const repositoryPostgres = new CommentRepositoryPostgres(pool, {}, {});
-      const errorRequestPayload = {
-        ...params,
-        owner: 'user-abc',
-      };
 
       // Assert
       await expect(repositoryPostgres.verifyCommentOwner({ ...errorRequestPayload }))
@@ -163,14 +157,11 @@ describe('CommentRepositoryPostgres', () => {
       });
 
       // Action
+      const deleteCommentEntity = new DeleteComment(params, owner);
       const repositoryPostgres = new CommentRepositoryPostgres(pool, {}, {});
-      const correctRequestPayload = {
-        commentId: params.commentId,
-        owner,
-      };
 
       // Assert
-      await expect(repositoryPostgres.verifyCommentOwner(correctRequestPayload))
+      await expect(repositoryPostgres.verifyCommentOwner({ ...deleteCommentEntity }))
         .resolves.not.toThrow(AuthorizationError);
     });
   });

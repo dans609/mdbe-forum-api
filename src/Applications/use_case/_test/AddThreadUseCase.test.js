@@ -1,7 +1,6 @@
 const PostThread = require('../../../Domains/threads/entities/PostThread');
 const PostedThread = require('../../../Domains/threads/entities/PostedThread');
 const ThreadRepository = require('../../../Domains/threads/ThreadRepository');
-const AuthenticationTokenManager = require('../../security/AuthenticationTokenManager');
 const AddThreadUseCase = require('../AddThreadUseCase');
 
 describe('AddThreadUseCase', () => {
@@ -17,7 +16,6 @@ describe('AddThreadUseCase', () => {
 
     /* creating dependency for the use case */
     const mockThreadRepository = new ThreadRepository();
-    const mockAuthManager = new AuthenticationTokenManager();
 
     /* mocking needed function of the dependency */
     mockThreadRepository.addThread = jest.fn()
@@ -28,10 +26,7 @@ describe('AddThreadUseCase', () => {
       })));
 
     /* creating use case instance */
-    const addThreadUseCase = new AddThreadUseCase({
-      threadRepository: mockThreadRepository,
-      authTokenManager: mockAuthManager,
-    });
+    const addThreadUseCase = new AddThreadUseCase(mockThreadRepository);
 
     // Action
     const postThread = new PostThread(useCasePayload, useCaseUserId);
@@ -39,8 +34,6 @@ describe('AddThreadUseCase', () => {
 
     // Assert
     expect(postedThread).toStrictEqual(expectedPostedThread);
-    expect(mockThreadRepository.addThread).toBeCalledWith({
-      ...postThread, owner: useCaseUserId,
-    });
+    expect(mockThreadRepository.addThread).toBeCalledWith({ ...postThread });
   });
 });

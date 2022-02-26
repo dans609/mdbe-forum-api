@@ -12,7 +12,7 @@ class CommentRepositoryPostgres extends CommentRepository {
     this._idGenerator = idGenerator;
   }
 
-  async addComment({ threadId, content, owner }) {
+  async addComment({ threadId, content, userId: owner }) {
     const id = `comment-${this._idGenerator()}`;
     const date = new this._date().toISOString();
     const query = {
@@ -78,7 +78,7 @@ class CommentRepositoryPostgres extends CommentRepository {
     }
   }
 
-  async verifyCommentOwner({ commentId, owner }) {
+  async verifyCommentOwner({ commentId, userId: owner }) {
     const query = {
       text: ` SELECT comments.id, users.id
               FROM comments

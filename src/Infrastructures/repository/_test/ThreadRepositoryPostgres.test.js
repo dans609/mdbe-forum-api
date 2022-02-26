@@ -1,12 +1,12 @@
 const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
 const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
+const NotFoundError = require('../../../Commons/exceptions/NotFoundError');
 const PostThread = require('../../../Domains/threads/entities/PostThread');
 const PostedThread = require('../../../Domains/threads/entities/PostedThread');
 const GetThread = require('../../../Domains/threads/entities/GetThread');
 const DetailThread = require('../../../Domains/threads/entities/DetailThread');
 const pool = require('../../database/postgres/pool');
 const ThreadRepositoryPostgres = require('../ThreadRepositoryPostgres');
-const NotFoundError = require('../../../Commons/exceptions/NotFoundError');
 
 describe('ThreadRepositoryPostgres', () => {
   afterEach(async () => {
@@ -21,17 +21,17 @@ describe('ThreadRepositoryPostgres', () => {
   describe('addThread function', () => {
     it('should persist post thread', async () => {
       // Arrange
-      await UsersTableTestHelper.addUser({ username: 'dicoding' });
       const payload = { title: 'Thread Title', body: 'Thread body' };
       const userId = 'user-123';
       const postThread = new PostThread(payload, userId);
+      await UsersTableTestHelper.addUser({ username: 'dicoding', id: userId });
 
       function date() { this.toISOString = () => '12-30-2022'; }
       const fakeIdGenerator = () => '123';
       const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, date, fakeIdGenerator);
 
       // Action
-      await threadRepositoryPostgres.addThread({ ...postThread, owner: userId });
+      await threadRepositoryPostgres.addThread({ ...postThread });
 
       // Assert
       const threads = await ThreadsTableTestHelper.findThreadById('thread-123');
@@ -50,9 +50,7 @@ describe('ThreadRepositoryPostgres', () => {
       const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, date, fakeIdGenerator);
 
       // Action
-      const postedThread = await threadRepositoryPostgres.addThread({
-        ...postThread, owner: userId,
-      });
+      const postedThread = await threadRepositoryPostgres.addThread({ ...postThread });
 
       // Assert
       expect(postedThread).toStrictEqual(new PostedThread({

@@ -1,12 +1,12 @@
 class DeleteComment {
-  constructor(params, authorization) {
+  constructor(params, userId) {
     this._verifyParams(params);
-    this._verifyAuth(authorization);
+    this._verifyId(userId);
 
     const { threadId, commentId } = params;
     this.threadId = threadId;
     this.commentId = commentId;
-    this.authToken = authorization;
+    this.userId = userId;
   }
 
   _verifyParams(params) {
@@ -15,12 +15,12 @@ class DeleteComment {
     }
   }
 
-  _verifyAuth(authorization) {
-    if (!authorization) {
+  _verifyId(userId) {
+    if (!userId) {
       throw new Error('DELETE_COMMENT.HEADERS_NOT_CONTAIN_NEEDED_PROPERTY');
     }
 
-    if (typeof authorization !== 'string') {
+    if (typeof userId !== 'string') {
       throw new Error('DELETE_COMMENT.HEADERS_NOT_MEET_DATA_TYPE_SPECIFICATION');
     }
   }

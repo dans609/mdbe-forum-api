@@ -3,15 +3,15 @@ const DeleteComment = require('../DeleteComment');
 describe('a deleteComment entities', () => {
   const generateRequest = () => ({
     params: { threadId: 'thread-123', commentId: 'comment-123' },
-    headers: { authorization: 'Bearer token-123', missTypeAuth: true },
+    userId: 'user-123',
   });
 
   it('should throw error when params did not contain needed property', () => {
     // Arrange
-    const { headers } = generateRequest();
+    const { userId } = generateRequest();
 
     // Action and Assert
-    expect(() => new DeleteComment({}, headers.authorization))
+    expect(() => new DeleteComment({}, userId))
       .toThrowError('DELETE_COMMENT.PARAMS_NOT_CONTAIN_NEEDED_PROPERTY');
   });
 
@@ -20,30 +20,31 @@ describe('a deleteComment entities', () => {
     const { params } = generateRequest();
 
     // Action and Assert
-    expect(() => new DeleteComment({ ...params }, NaN))
+    expect(() => new DeleteComment({ ...params }, undefined))
       .toThrowError('DELETE_COMMENT.HEADERS_NOT_CONTAIN_NEEDED_PROPERTY');
   });
 
   it('should throw error when headers did not meet data type specification', () => {
     // Arrange
-    const { params, headers } = generateRequest();
+    const { params } = generateRequest();
 
     // Action and Assert
-    expect(() => new DeleteComment({ ...params }, headers.missTypeAuth))
+    expect(() => new DeleteComment({ ...params }, 420))
       .toThrowError('DELETE_COMMENT.HEADERS_NOT_MEET_DATA_TYPE_SPECIFICATION');
   });
 
   it('should take delete comment request object correctly', () => {
     // Arrange
-    const { params, headers } = generateRequest();
+    const { params, userId } = generateRequest();
 
     // Action
-    const requestObject = new DeleteComment({ ...params }, headers.authorization);
+    const deleteCommentEntity = new DeleteComment({ ...params }, userId);
 
     // Assert
-    expect(requestObject).toMatchObject({
-      ...params,
-      authToken: headers.authorization,
+    expect({ ...deleteCommentEntity }).toStrictEqual({
+      threadId: 'thread-123',
+      commentId: 'comment-123',
+      userId: 'user-123',
     });
   });
 });

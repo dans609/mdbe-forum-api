@@ -1,13 +1,13 @@
 class PostComment {
-  constructor(request, authorization) {
+  constructor(request, userId) {
     this._verifyPayload(request.payload);
     this._verifyParams(request.params);
-    this._verifyAuth(authorization);
+    this._verifyId(userId);
 
     const { payload, params } = request;
     this.content = payload.content;
     this.threadId = params.threadId;
-    this.authToken = authorization;
+    this.userId = userId;
   }
 
   _verifyPayload(payload = {}) {
@@ -26,12 +26,12 @@ class PostComment {
     }
   }
 
-  _verifyAuth(authorization) {
-    if (!authorization) {
+  _verifyId(userId) {
+    if (!userId) {
       throw new Error('POST_COMMENT.HEADERS_NOT_CONTAIN_NEEDED_PROPERTY');
     }
 
-    if (typeof authorization !== 'string') {
+    if (typeof userId !== 'string') {
       throw new Error('POST_COMMENT.HEADERS_NOT_MEET_DATA_TYPE_SPECIFICATION');
     }
   }

@@ -198,15 +198,9 @@ container.register([
     key: AddThreadUseCase.name,
     Class: AddThreadUseCase,
     parameter: {
-      injectType: 'destructuring',
       dependencies: [
         {
-          name: 'threadRepository',
           internal: ThreadRepository.name,
-        },
-        {
-          name: 'authTokenManager',
-          internal: AuthenticationTokenManager.name,
         },
       ],
     },
@@ -224,10 +218,6 @@ container.register([
         {
           name: 'threadRepository',
           internal: ThreadRepository.name,
-        },
-        {
-          name: 'authTokenManager',
-          internal: AuthenticationTokenManager.name,
         },
       ],
     },
