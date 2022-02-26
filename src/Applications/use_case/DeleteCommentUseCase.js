@@ -1,10 +1,9 @@
 const DeleteComment = require('../../Domains/comments/entities/DeleteComment');
 
 class DeleteCommentUseCase {
-  constructor({ commentRepository, threadRepository, authTokenManager }) {
+  constructor({ commentRepository, threadRepository }) {
     this._commentRepository = commentRepository;
     this._threadRepository = threadRepository;
-    this._authTokenManager = authTokenManager;
   }
 
   async execute(params, userId) {

@@ -1,7 +1,6 @@
 const DeleteComment = require('../../../Domains/comments/entities/DeleteComment');
 const ThreadRepository = require('../../../Domains/threads/ThreadRepository');
 const CommentRepository = require('../../../Domains/comments/CommentRepository');
-const AuthenticationTokenManager = require('../../security/AuthenticationTokenManager');
 const DeleteCommentUseCase = require('../DeleteCommentUseCase');
 
 describe('DeleteCommentUseCase', () => {
@@ -13,7 +12,6 @@ describe('DeleteCommentUseCase', () => {
     /* creating dependency for the use case */
     const mockCommentRepository = new CommentRepository();
     const mockThreadRepository = new ThreadRepository();
-    const mockAuthManager = new AuthenticationTokenManager();
 
     /* mocking needed function of the dependency */
     mockThreadRepository.verifyThreadById = jest.fn()
@@ -31,7 +29,6 @@ describe('DeleteCommentUseCase', () => {
     const deleteCommentUseCase = new DeleteCommentUseCase({
       commentRepository: mockCommentRepository,
       threadRepository: mockThreadRepository,
-      authTokenManager: mockAuthManager,
     });
 
     // Action
