@@ -1,5 +1,4 @@
 const InvariantError = require('./InvariantError');
-const AuthenticationError = require('./AuthenticationError');
 
 const DomainErrorTranslator = {
   translate(error) {
@@ -20,13 +19,10 @@ DomainErrorTranslator._directories = {
   'DELETE_AUTHENTICATION_USE_CASE.PAYLOAD_NOT_MEET_DATA_TYPE_SPECIFICATION': new InvariantError('refresh token harus string'),
   'POST_THREAD.PAYLOAD_NOT_CONTAIN_NEEDED_PROPERTY': new InvariantError('tidak dapat membuat thread baru karena properti yang dibutuhkan tidak ada'),
   'POST_THREAD.PAYLOAD_NOT_MEET_DATA_TYPE_SPECIFICATION': new InvariantError('tidak dapat membuat thread baru karena tipe data tidak sesuai'),
-  'POST_THREAD.HEADERS_NOT_CONTAIN_NEEDED_PROPERTY': new AuthenticationError('Missing authentication'),
   'POST_THREAD.HEADERS_NOT_MEET_DATA_TYPE_SPECIFICATION': new InvariantError('tidak dapat membuat thread baru karena tipe data authorization token headers tidak sesuai'),
   'POST_COMMENT.PAYLOAD_NOT_CONTAIN_NEEDED_PROPERTY': new InvariantError('tidak dapat membuat comment baru karena properti yang dibutuhkan tidak ada'),
   'POST_COMMENT.PAYLOAD_NOT_MEET_DATA_TYPE_SPECIFICATION': new InvariantError('tidak dapat membuat comment baru karena tipe data properti tidak sesuai'),
-  'POST_COMMENT.HEADERS_NOT_CONTAIN_NEEDED_PROPERTY': new AuthenticationError('Missing authentication'),
   'POST_COMMENT.HEADERS_NOT_MEET_DATA_TYPE_SPECIFICATION': new InvariantError('tidak dapat membuat comment baru karena tipe data authorization token headers tidak sesuai'),
-  'DELETE_COMMENT.HEADERS_NOT_CONTAIN_NEEDED_PROPERTY': new AuthenticationError('Missing authentication'),
   'DELETE_COMMENT.HEADERS_NOT_MEET_DATA_TYPE_SPECIFICATION': new InvariantError('tidak dapat menghapus komentar karena tipe data auth token tidak sesuai'),
 };
 

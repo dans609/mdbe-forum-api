@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 const ServerTestHelper = require('../../../../tests/ServerTestHelper');
 const CommentsTableTestHelper = require('../../../../tests/CommentsTableTestHelper');
 const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
@@ -113,34 +112,8 @@ describe('/threads endpoint', () => {
       // Assert
       const responseJson = JSON.parse(response.payload);
       expect(response.statusCode).toEqual(401);
-      expect(responseJson).toMatchObject({
-        status: 'fail',
-        message: 'Missing authentication',
-      });
-    });
-
-    it('should response 400 when authorization token headers not meet data type specification', async () => {
-      // Arrange
-      const requestPayload = { title: 'Thread Title', body: 'Thread body' };
-      const server = await createServer(container);
-
-      // Action
-      const response = await server.inject({
-        method: 'POST',
-        url: '/threads',
-        payload: requestPayload,
-        headers: {
-          Authorization: true,
-        },
-      });
-
-      // Assert
-      const responseJson = JSON.parse(response.payload);
-      expect(response.statusCode).toEqual(400);
-      expect(responseJson).toMatchObject({
-        status: 'fail',
-        message: 'tidak dapat membuat thread baru karena tipe data authorization token headers tidak sesuai',
-      });
+      expect(responseJson).toBeInstanceOf(Object);
+      expect(responseJson.message).toStrictEqual('Missing authentication');
     });
   });
 

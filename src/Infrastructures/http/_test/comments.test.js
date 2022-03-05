@@ -159,36 +159,8 @@ describe('/threads/{threadId}/comments endpoint', () => {
       // Assert
       const responseJson = JSON.parse(response.payload);
       expect(response.statusCode).toEqual(401);
-      expect(responseJson).toMatchObject({
-        status: 'fail',
-        message: 'Missing authentication',
-      });
-    });
-
-    it('should response 400 when authorization token headers not meet data type specification', async () => {
-      // Arrange
-      const { payload, params } = RequestTestHelper;
-      const server = await createServer(container);
-      const serverHelper = await ServerTestHelper.startService(server);
-      await ThreadsTableTestHelper.addThreads({ owner: serverHelper.userId });
-
-      // Action
-      const response = await server.inject({
-        method: 'POST',
-        url: `/threads/${params.threadId}/comments`,
-        payload: { content: payload.content },
-        headers: {
-          Authorization: 205,
-        },
-      });
-
-      // Assert
-      const responseJson = JSON.parse(response.payload);
-      expect(response.statusCode).toEqual(400);
-      expect(responseJson).toMatchObject({
-        status: 'fail',
-        message: 'tidak dapat membuat comment baru karena tipe data authorization token headers tidak sesuai',
-      });
+      expect(responseJson).toBeInstanceOf(Object);
+      expect(responseJson.message).toStrictEqual('Missing authentication');
     });
   });
 
@@ -377,39 +349,8 @@ describe('/threads/{threadId}/comments endpoint', () => {
       // Assert
       const responseJson = JSON.parse(response.payload);
       expect(response.statusCode).toEqual(401);
-      expect(responseJson).toMatchObject({
-        status: 'fail',
-        message: 'Missing authentication',
-      });
-    });
-
-    it('should response 400 when authorization token headers not meet data type specification', async () => {
-      const { threadId, commentId } = RequestTestHelper.params;
-      const server = await createServer(container);
-      const serverHelper = await ServerTestHelper.startService(server);
-      await ThreadsTableTestHelper.addThreads({ id: threadId, owner: serverHelper.userId });
-      await CommentsTableTestHelper.addComment({
-        threadId,
-        id: commentId,
-        owner: serverHelper.userId,
-      });
-
-      // Action
-      const response = await server.inject({
-        method: 'DELETE',
-        url: `/threads/${threadId}/comments/${commentId}`,
-        headers: {
-          Authorization: true,
-        },
-      });
-
-      // Assert
-      const responseJson = JSON.parse(response.payload);
-      expect(response.statusCode).toEqual(400);
-      expect(responseJson).toMatchObject({
-        status: 'fail',
-        message: 'tidak dapat menghapus komentar karena tipe data auth token tidak sesuai',
-      });
+      expect(responseJson).toBeInstanceOf(Object);
+      expect(responseJson.message).toStrictEqual('Missing authentication');
     });
   });
 });

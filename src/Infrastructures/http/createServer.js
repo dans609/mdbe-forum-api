@@ -1,15 +1,39 @@
 const Hapi = require('@hapi/hapi');
+const Jwt = require('@hapi/jwt');
+const Joi = require('@hapi/joi');
 const ClientError = require('../../Commons/exceptions/ClientError');
 const DomainErrorTranslator = require('../../Commons/exceptions/DomainErrorTranslator');
+const JoiValidator = require('../validator/joi/JoiValidator');
+const JoiScheme = require('../validator/joi/JoiScheme');
 const users = require('../../Interfaces/http/api/users');
 const authentications = require('../../Interfaces/http/api/authentications');
 const threads = require('../../Interfaces/http/api/threads');
 const comments = require('../../Interfaces/http/api/comments');
 
+const joiScheme = new JoiScheme(Joi);
+const joiValidator = new JoiValidator(joiScheme);
 const createServer = async (container) => {
   const server = Hapi.server({
     host: process.env.HOST,
     port: process.env.PORT,
+  });
+
+  await server.register(Jwt);
+  server.auth.strategy('forumapi_jwt', 'jwt', {
+    keys: process.env.ACCESS_TOKEN_KEY,
+    verify: {
+      aud: false,
+      iss: false,
+      sub: false,
+      maxAgeSec: process.env.ACCCESS_TOKEN_AGE,
+    },
+    validate: (artifacts) => ({
+      isValid: true,
+      credentials: {
+        id: artifacts.decoded.payload.id,
+        username: artifacts.decoded.payload.username,
+      },
+    }),
   });
 
   await server.register([
@@ -23,11 +47,11 @@ const createServer = async (container) => {
     },
     {
       plugin: threads,
-      options: { container },
+      options: { container, validator: joiValidator },
     },
     {
       plugin: comments,
-      options: { container },
+      options: { container, validator: joiValidator },
     },
   ]);
 
