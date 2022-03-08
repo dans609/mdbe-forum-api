@@ -127,9 +127,6 @@ describe('/threads endpoint', () => {
       await firstUser.injectComment({ content: 'Content dari komentar' });
       await firstUser.deleteLastComment();
 
-      /* get the id of the deleted comment */
-      const deletedCommentId = firstUser.addedComment.id;
-
       /* add more user and comment that belong to the firstUser thread */
       const serverHelper = firstUser.changeUsername('johndoe');
       const secondUser = await serverHelper.startService(server);
@@ -141,14 +138,14 @@ describe('/threads endpoint', () => {
         url: `/threads/${serverHelper.addedThread.id}`,
       });
 
-      /* getting all required data that have been posted to database */
-      const thread = await ThreadsTableTestHelper.findThreadById(serverHelper.addedThread.id);
-      const user = await UsersTableTestHelper.findUsersById(thread[0].owner);
-      const comments = (await getAllCommentsInThread(thread[0].id)).map((c) => ({
+      /* get all required data which have been posted to database */
+      const thread = (await ThreadsTableTestHelper.findThreadById(serverHelper.addedThread.id))[0];
+      const user = (await UsersTableTestHelper.findUsersById(thread.owner))[0];
+      const comments = (await getAllCommentsInThread(thread.id)).map((c) => ({
         id: c.id,
         username: c.username,
-        date: c.date,
-        content: (c.id === deletedCommentId) ? '**komentar telah dihapus**' : c.content,
+        date: c.date.toISOString(),
+        content: (c.is_deleted) ? '**komentar telah dihapus**' : c.content,
       }));
 
       // Assert
@@ -156,12 +153,12 @@ describe('/threads endpoint', () => {
       expect(response.statusCode).toEqual(200);
       expect(responseJson.status).toEqual('success');
       expect(responseJson.data.thread).toBeDefined();
-      expect(responseJson.data.thread).toMatchObject({
+      expect(responseJson.data.thread).toStrictEqual({
         id: firstUser.addedThread.id,
         title: firstUser.addedThread.title,
-        body: thread[0].body,
-        date: thread[0].date,
-        username: user[0].username,
+        body: thread.body,
+        date: thread.date.toISOString(),
+        username: user.username,
         comments,
       });
     });

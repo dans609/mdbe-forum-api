@@ -1,8 +1,8 @@
 const DetailThread = require('../DetailThread');
 
 describe('a DetailThread entities', () => {
-  describe('covered line needs', () => {
-    it('should allow all keys object to enter the entity', () => {
+  describe('simplify needs', () => {
+    it('should allow any keys object to enter the entity, but must still put required keys', () => {
       const anyKeys = { commentId: 'comment-123', userId: 'user-123', any: true };
       const requiredKeys = {
         id: 'thread-123',
@@ -35,7 +35,7 @@ describe('a DetailThread entities', () => {
 
     // Action and Assert
     expect(() => new DetailThread(responses))
-      .toThrowError('DETAIL_THREAD.NOT_CONTAIN_NEEDED_PROPERTY');
+      .toThrowError('DETAIL_THREAD.RESPONSES_NOT_CONTAIN_NEEDED_PROPERTY');
   });
 
   it('should throw error when responses did not meet data type specification', () => {
@@ -50,7 +50,7 @@ describe('a DetailThread entities', () => {
 
     // Action and Assert
     expect(() => new DetailThread({ ...responses, ...fkResponse }))
-      .toThrowError('DETAIL_THREAD.NOT_MEET_DATA_TYPE_SPECIFICATION');
+      .toThrowError('DETAIL_THREAD.RESPONSES_NOT_MEET_DATA_TYPE_SPECIFICATION');
   });
 
   it('should create detailedThread object correctly', () => {

@@ -13,19 +13,23 @@ class DetailThread {
   }
 
   _verifyResponse(res) {
-    if (!res.id || !res.title || !res.body || !res.date || !res.username) {
-      throw new Error('DETAIL_THREAD.NOT_CONTAIN_NEEDED_PROPERTY');
-    }
+    const propertyError = 'DETAIL_THREAD.RESPONSES_NOT_CONTAIN_NEEDED_PROPERTY';
+    const typeError = 'DETAIL_THREAD.RESPONSES_NOT_MEET_DATA_TYPE_SPECIFICATION';
 
-    const keys = Object.keys(res);
-    const allowedKeys = ['id', 'title', 'body', 'date', 'username'];
-    keys.forEach((key) => {
-      if (allowedKeys.indexOf(key) > -1) {
-        if (typeof res[key] !== 'string') {
-          throw new Error('DETAIL_THREAD.NOT_MEET_DATA_TYPE_SPECIFICATION');
-        }
-      }
-    });
+    const isPropertyError = !res.id
+      || !res.title
+      || !res.body
+      || !res.date
+      || !res.username;
+
+    const isTypeError = typeof res.id !== 'string'
+      || typeof res.title !== 'string'
+      || typeof res.body !== 'string'
+      || typeof res.date !== 'string'
+      || typeof res.username !== 'string';
+
+    if (isPropertyError) throw new Error(propertyError);
+    if (isTypeError) throw new Error(typeError);
   }
 }
 

@@ -20,14 +20,12 @@ describe('GetThreadUseCase', () => {
         username: 'dicoding',
         date: '12-29-2022',
         content: 'Content dari komentar',
-        is_deleted: true,
       },
       second: {
         id: 'comment-123',
         username: 'johndoe',
         date: '12-30-2022',
         content: 'sebuah comment',
-        is_deleted: false,
       },
     },
   });
@@ -40,8 +38,8 @@ describe('GetThreadUseCase', () => {
     /* create entities instance */
     const detailThread = new DetailThread(thread);
     const commentsInThread = [
-      new DetailComment(comments.first),
-      new DetailComment(comments.second),
+      new DetailComment({ ...comments.first, is_deleted: true }),
+      new DetailComment({ ...comments.second, is_deleted: false }),
     ];
 
     /* create object that contain expected return value from use case */
@@ -58,8 +56,8 @@ describe('GetThreadUseCase', () => {
       .mockImplementation(() => Promise.resolve(new DetailThread({ ...thread })));
     mockCommentRepository.getCommentsByThreadId = jest.fn()
       .mockImplementation(() => Promise.resolve([
-        new DetailComment({ ...comments.first }),
-        new DetailComment({ ...comments.second }),
+        new DetailComment({ ...comments.first, is_deleted: true }),
+        new DetailComment({ ...comments.second, is_deleted: false }),
       ]));
 
     /* creating use case instance */

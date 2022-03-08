@@ -1,7 +1,7 @@
 const DetailComment = require('../DetailComment');
 
 describe('a DetailComment entities', () => {
-  describe('covered line needs and guarantee stuff security', () => {
+  describe('simplify need and guarantee security to not set is_deleted or non-required keys as a property', () => {
     it('allow all keys object enter the entity, but required keys must enter the entity', () => {
       const anyKeys = { threadId: 'thread-123', threadTitle: 'Thread Title', any: true };
       const requiredKeys = {
@@ -49,7 +49,7 @@ describe('a DetailComment entities', () => {
 
     // Action and Assert
     expect(() => new DetailComment(responses))
-      .toThrowError('DETAIL_COMMENT.NOT_CONTAIN_NEEDED_PROPERTY');
+      .toThrowError('DETAIL_COMMENT.RESPONSES_NOT_CONTAIN_NEEDED_PROPERTY');
   });
 
   it('should throw error when responses not meet data type specification', () => {
@@ -63,7 +63,7 @@ describe('a DetailComment entities', () => {
 
     // Action and Assert
     expect(() => new DetailComment({ ...responses, ...fkResponse }))
-      .toThrowError('DETAIL_COMMENT.NOT_MEET_DATA_TYPE_SPECIFICATION');
+      .toThrowError('DETAIL_COMMENT.RESPONSES_NOT_MEET_DATA_TYPE_SPECIFICATION');
   });
 
   it('should throw error when is_deleted response not meet data type specification', () => {
@@ -77,7 +77,7 @@ describe('a DetailComment entities', () => {
 
     // Action and Assert
     expect(() => new DetailComment({ ...response, ...fkResponse }))
-      .toThrowError('DETAIL_COMMENT.IS_DELETED_NOT_MEET_DATA_TYPE_SPECIFICATION');
+      .toThrowError('DETAIL_COMMENT.PROPERTY_IS_DELETED_NOT_MEET_DATA_TYPE_SPECIFICATION');
   });
 
   it('should create detailComments object correctly for deleted comment', () => {

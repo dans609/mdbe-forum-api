@@ -40,9 +40,8 @@ describe('CommentRepositoryPostgres', () => {
       await UsersTableTestHelper.addUser({ username: 'dicoding', id: owner });
       await ThreadsTableTestHelper.addThreads({ id: params.threadId, owner });
 
-      function date() { this.toISOString = () => '12-30-2022'; }
       const fakeIdGenerator = () => '123';
-      const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, date, fakeIdGenerator);
+      const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, fakeIdGenerator);
 
       // Action
       await commentRepositoryPostgres.addComment({ ...postComment });
@@ -59,9 +58,8 @@ describe('CommentRepositoryPostgres', () => {
       await UsersTableTestHelper.addUser({ username: 'dicoding', id: owner });
       await ThreadsTableTestHelper.addThreads({ id: params.threadId, owner });
 
-      function date() { this.toISOString = () => '12-30-2022'; }
       const fakeIdGenerator = () => '123';
-      const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, date, fakeIdGenerator);
+      const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, fakeIdGenerator);
 
       // Action
       const postedComment = await commentRepositoryPostgres.addComment({ ...postComment });
@@ -88,7 +86,7 @@ describe('CommentRepositoryPostgres', () => {
       });
 
       // Action
-      const repositoryPostgres = new CommentRepositoryPostgres(pool, {}, {});
+      const repositoryPostgres = new CommentRepositoryPostgres(pool, {});
       const errorRequest = {
         commentId: 'comment-abc',
         threadId: params.threadId,
@@ -114,7 +112,7 @@ describe('CommentRepositoryPostgres', () => {
       });
 
       // Action
-      const repositoryPostgres = new CommentRepositoryPostgres(pool, {}, {});
+      const repositoryPostgres = new CommentRepositoryPostgres(pool, {});
 
       // Assert
       await expect(repositoryPostgres.verifyCommentByThreadId({ ...params, owner }))
@@ -136,7 +134,7 @@ describe('CommentRepositoryPostgres', () => {
 
       // Action
       const errorRequestPayload = { ...params, owner: 'user-abc' };
-      const repositoryPostgres = new CommentRepositoryPostgres(pool, {}, {});
+      const repositoryPostgres = new CommentRepositoryPostgres(pool, {});
 
       // Assert
       await expect(repositoryPostgres.verifyCommentOwner({ ...errorRequestPayload }))
@@ -158,7 +156,7 @@ describe('CommentRepositoryPostgres', () => {
 
       // Action
       const deleteCommentEntity = new DeleteComment(params, owner);
-      const repositoryPostgres = new CommentRepositoryPostgres(pool, {}, {});
+      const repositoryPostgres = new CommentRepositoryPostgres(pool, {});
 
       // Assert
       await expect(repositoryPostgres.verifyCommentOwner({ ...deleteCommentEntity }))
@@ -179,7 +177,7 @@ describe('CommentRepositoryPostgres', () => {
       });
 
       // Action
-      const repositoryPostgres = new CommentRepositoryPostgres(pool, {}, {});
+      const repositoryPostgres = new CommentRepositoryPostgres(pool, {});
 
       // Assert
       await expect(repositoryPostgres.verifyCommentNotDeleted(params.commentId))
@@ -201,7 +199,7 @@ describe('CommentRepositoryPostgres', () => {
       });
 
       // Action
-      const repositoryPostgres = new CommentRepositoryPostgres(pool, {}, {});
+      const repositoryPostgres = new CommentRepositoryPostgres(pool, {});
 
       // Assert
       await expect(repositoryPostgres.verifyCommentNotDeleted(params.commentId))
@@ -224,7 +222,7 @@ describe('CommentRepositoryPostgres', () => {
       });
 
       // Action
-      const repositoryPostgres = new CommentRepositoryPostgres(pool, {}, {});
+      const repositoryPostgres = new CommentRepositoryPostgres(pool, {});
       const softDelete = await repositoryPostgres.softDeleteById(params.commentId);
 
       // Assert
@@ -251,7 +249,7 @@ describe('CommentRepositoryPostgres', () => {
       /* add data to database and create repository instance */
       await UsersTableTestHelper.addUser({ ...user });
       await ThreadsTableTestHelper.addThreads({ ...thread });
-      const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {}, {});
+      const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {});
 
       // Action
       const detailComment = await commentRepositoryPostgres.getCommentsByThreadId(thread.id);
@@ -263,6 +261,7 @@ describe('CommentRepositoryPostgres', () => {
 
     it('should correctly return detail all comments (includes deleted comment) and order comments by date (asc)', async () => {
       // Arrange
+      const date = (new Date()).toISOString();
       const user = {
         one: { id: 'user-abc', username: 'johndoe' },
         two: { id: 'user-123', username: 'dicoding' },
@@ -273,19 +272,19 @@ describe('CommentRepositoryPostgres', () => {
           id: 'comment-xxx',
           content: 'Hello world',
           username: user.one.username,
-          date: '12-30-2022',
+          date,
         },
         {
           id: 'comment-abc',
           content: 'Sebuah komentar',
           username: user.two.username,
-          date: '12-28-2022',
+          date,
         },
         {
           id: 'comment-123',
           content: 'Content dari komentar',
           username: user.one.username,
-          date: '12-29-2022',
+          date: '2022-01-01',
         },
       ];
 
@@ -296,11 +295,11 @@ describe('CommentRepositoryPostgres', () => {
       await CommentsTableTestHelper.addComment({ threadId, owner: user.one.id, ...comments[0] });
       await CommentsTableTestHelper.addComment({ threadId, owner: user.two.id, ...comments[1] });
       await CommentsTableTestHelper.addComment({ threadId, owner: user.one.id, ...comments[2] });
-      const repositoryPostgres = new CommentRepositoryPostgres(pool, {}, {});
+      const repositoryPostgres = new CommentRepositoryPostgres(pool, {});
 
       // Action
       /* random deleting comment and get all comments belong the thread */
-      await repositoryPostgres.softDeleteById(comments[2].id);
+      await CommentsTableTestHelper.deleteCommentById(comments[2].id);
       const detailComment = await repositoryPostgres.getCommentsByThreadId(threadId);
 
       // Assert
@@ -309,9 +308,19 @@ describe('CommentRepositoryPostgres', () => {
       expect(detailComment[0]).toBeInstanceOf(DetailComment);
       expect(detailComment[1]).toBeInstanceOf(DetailComment);
       expect(detailComment[2]).toBeInstanceOf(DetailComment);
-      expect(detailComment[0]).toMatchObject({ ...comments[1] });
-      expect(detailComment[1]).toMatchObject({ ...comments[2], content: deletedContent });
-      expect(detailComment[2]).toMatchObject({ ...comments[0] });
+
+      comments.forEach((comment, index) => {
+        expect(detailComment[index]).toHaveProperty('id', comment.id);
+        expect(detailComment[index]).toHaveProperty('username', comment.username);
+        expect(detailComment[index]).toHaveProperty('content');
+        expect(detailComment[index]).toHaveProperty('date');
+        expect(detailComment[index].date).toBeTruthy();
+        expect(typeof detailComment[index].date).toBe('string');
+      });
+
+      expect(detailComment[0].content).toStrictEqual(comments[0].content);
+      expect(detailComment[1].content).toStrictEqual(comments[1].content);
+      expect(detailComment[2].content).toStrictEqual(deletedContent);
     });
   });
 });

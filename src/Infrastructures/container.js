@@ -1,5 +1,4 @@
 /* istanbul ignore file */
-const date = Date;
 const { createContainer } = require('instances-container');
 
 // external agency
@@ -71,9 +70,6 @@ container.register([
           concrete: pool,
         },
         {
-          concrete: date,
-        },
-        {
           concrete: nanoid,
         },
       ],
@@ -86,9 +82,6 @@ container.register([
       dependencies: [
         {
           concrete: pool,
-        },
-        {
-          concrete: date,
         },
         {
           concrete: nanoid,

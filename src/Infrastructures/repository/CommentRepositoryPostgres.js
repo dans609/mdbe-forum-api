@@ -5,19 +5,17 @@ const DetailComment = require('../../Domains/comments/entities/DetailComment');
 const PostedComment = require('../../Domains/comments/entities/PostedComment');
 
 class CommentRepositoryPostgres extends CommentRepository {
-  constructor(pool, date, idGenerator) {
+  constructor(pool, idGenerator) {
     super();
     this._pool = pool;
-    this._date = date;
     this._idGenerator = idGenerator;
   }
 
   async addComment({ threadId, content, userId: owner }) {
     const id = `comment-${this._idGenerator()}`;
-    const date = new this._date().toISOString();
     const query = {
-      text: 'INSERT INTO comments VALUES($1, $2, $3, $4, $5) RETURNING id, content, owner',
-      values: [id, threadId, content, owner, date],
+      text: 'INSERT INTO comments VALUES($1, $2, $3, $4) RETURNING id, content, owner',
+      values: [id, threadId, content, owner],
     };
 
     const result = await this._pool.query(query);
@@ -49,7 +47,9 @@ class CommentRepositoryPostgres extends CommentRepository {
     };
 
     const result = await this._pool.query(query);
-    return result.rows.map((row) => new DetailComment({ ...row }));
+    return result.rows.map((row) => new DetailComment({
+      ...row, date: row.date.toISOString(),
+    }));
   }
 
   async verifyCommentNotDeleted(commentId) {
