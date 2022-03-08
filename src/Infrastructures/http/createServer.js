@@ -1,17 +1,12 @@
 const Hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
-const Joi = require('@hapi/joi');
 const ClientError = require('../../Commons/exceptions/ClientError');
 const DomainErrorTranslator = require('../../Commons/exceptions/DomainErrorTranslator');
-const JoiValidator = require('../validator/joi/JoiValidator');
-const JoiScheme = require('../validator/joi/JoiScheme');
 const users = require('../../Interfaces/http/api/users');
 const authentications = require('../../Interfaces/http/api/authentications');
 const threads = require('../../Interfaces/http/api/threads');
 const comments = require('../../Interfaces/http/api/comments');
 
-const joiScheme = new JoiScheme(Joi);
-const joiValidator = new JoiValidator(joiScheme);
 const createServer = async (container) => {
   const server = Hapi.server({
     host: process.env.HOST,
@@ -47,11 +42,11 @@ const createServer = async (container) => {
     },
     {
       plugin: threads,
-      options: { container, validator: joiValidator },
+      options: { container },
     },
     {
       plugin: comments,
-      options: { container, validator: joiValidator },
+      options: { container },
     },
   ]);
 

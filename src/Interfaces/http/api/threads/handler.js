@@ -2,16 +2,15 @@ const AddThreadUseCase = require('../../../../Applications/use_case/AddThreadUse
 const GetThreadUseCase = require('../../../../Applications/use_case/GetThreadUseCase');
 
 class ThreadsHandler {
-  constructor(container, validator) {
+  constructor(container) {
     this._container = container;
-    this._validator = validator;
 
     this.postThreadHandler = this.postThreadHandler.bind(this);
     this.getThreadHandler = this.getThreadHandler.bind(this);
   }
 
   async postThreadHandler(request, h) {
-    const { id: userId } = this._validator.set(request.auth.credentials).validateCredentials();
+    const { id: userId } = request.auth.credentials;
     const addThreadUseCase = this._container.getInstance(AddThreadUseCase.name);
     const addedThread = await addThreadUseCase.execute(request.payload, userId);
 
