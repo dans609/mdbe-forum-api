@@ -10,7 +10,7 @@ class AddCommentUseCase {
     const postComment = new PostComment(request, userId);
     await this._threadRepository.verifyThreadById(postComment.threadId);
 
-    return this._commentRepository.addComment({ ...postComment });
+    return this._commentRepository.addComment(postComment);
   }
 }
 

@@ -1,51 +1,60 @@
 const PostThread = require('../PostThread');
 
 describe('a PostThread entities', () => {
-  it('should throw error when payload did not contain needed property', () => {
-    // Arrange
-    const payload = { title: 'Thread Title' };
-    const userId = 'user-123';
-
-    // Action and Assert
-    expect(() => new PostThread(payload, userId)).toThrowError('POST_THREAD.PAYLOAD_NOT_CONTAIN_NEEDED_PROPERTY');
+  const generateRequest = () => ({
+    payload: { title: 'Thread Title', body: 'Thread body' },
+    userId: 'user-123',
   });
 
-  it('should throw error when headers did not contain needed property', () => {
+  it('should throw error when payload did not contain needed property', () => {
     // Arrange
-    const payload = { title: 'Thread Title', body: 'Thread body' };
+    const { payload, userId } = generateRequest();
+    delete payload.body;
 
     // Action and Assert
-    expect(() => new PostThread(payload, undefined)).toThrowError('POST_THREAD.HEADERS_NOT_CONTAIN_NEEDED_PROPERTY');
+    expect(() => new PostThread(payload, userId))
+      .toThrowError('POST_THREAD.PAYLOAD_NOT_CONTAIN_NEEDED_PROPERTY');
   });
 
   it('should throw error when payload did not meet data type specification', () => {
     // Arrange
-    const payload = { title: 123, body: true };
+    const { payload, userId } = generateRequest();
+    payload.title = 17;
 
     // Action and Assert
-    expect(() => new PostThread(payload, {})).toThrowError('POST_THREAD.PAYLOAD_NOT_MEET_DATA_TYPE_SPECIFICATION');
+    expect(() => new PostThread(payload, userId))
+      .toThrowError('POST_THREAD.PAYLOAD_NOT_MEET_DATA_TYPE_SPECIFICATION');
+  });
+
+  it('should throw error when headers did not contain needed property', () => {
+    // Arrange
+    const { payload } = generateRequest();
+
+    // Action and Assert
+    expect(() => new PostThread(payload, undefined))
+      .toThrowError('POST_THREAD.HEADERS_NOT_CONTAIN_NEEDED_PROPERTY');
   });
 
   it('should throw error when headers did not meet data type specification', () => {
     // Arrange
-    const payload = { title: 'Thread Title', body: 'Thread body' };
-    const userId = true;
+    const request = generateRequest();
+    request.userId = true;
 
     // Action and Assert
-    expect(() => new PostThread(payload, userId)).toThrowError('POST_THREAD.HEADERS_NOT_MEET_DATA_TYPE_SPECIFICATION');
+    expect(() => new PostThread(request.payload, request.userId))
+      .toThrowError('POST_THREAD.HEADERS_NOT_MEET_DATA_TYPE_SPECIFICATION');
   });
 
   it('should post thread object correctly', () => {
     // Arrange
-    const payload = { title: 'Thread Title', body: 'Thread body' };
-    const auth = { credentials: { id: 'user-123' } };
+    const { payload, userId } = generateRequest();
+    const { payload: expectedPayload, userId: expectedUserId } = generateRequest();
 
     // Action
-    const { title, body, userId } = new PostThread(payload, auth.credentials.id);
+    const postThread = new PostThread(payload, userId);
 
     // Assert
-    expect(title).toEqual(payload.title);
-    expect(body).toEqual(payload.body);
-    expect(userId).toEqual(auth.credentials.id);
+    expect(postThread).toMatchObject({ ...expectedPayload, userId: expectedUserId });
+    expect(postThread).toStrictEqual(new PostThread(expectedPayload, expectedUserId));
   });
 });

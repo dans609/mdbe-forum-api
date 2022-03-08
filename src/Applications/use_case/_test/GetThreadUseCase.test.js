@@ -50,15 +50,30 @@ describe('GetThreadUseCase', () => {
     const mockCommentRepository = new CommentRepository();
 
     /* mocking the needed function */
-    mockThreadRepository.verifyThreadById = jest.fn()
-      .mockImplementation(() => Promise.resolve());
-    mockThreadRepository.getThreadById = jest.fn()
-      .mockImplementation(() => Promise.resolve(new DetailThread({ ...thread })));
-    mockCommentRepository.getCommentsByThreadId = jest.fn()
-      .mockImplementation(() => Promise.resolve([
-        new DetailComment({ ...comments.first, is_deleted: true }),
-        new DetailComment({ ...comments.second, is_deleted: false }),
-      ]));
+    mockThreadRepository.verifyThreadById = jest.fn(() => Promise.resolve());
+    mockThreadRepository.getThreadById = jest.fn(() => Promise.resolve(new DetailThread({
+      id: params.threadId,
+      title: 'Thread Title',
+      body: 'Thread body',
+      date: '12-29-2022',
+      username: 'dicoding',
+    })));
+    mockCommentRepository.getCommentsByThreadId = jest.fn(() => Promise.resolve([
+      new DetailComment({
+        id: 'comment-abc',
+        username: 'dicoding',
+        date: '12-29-2022',
+        content: 'Content dari komentar',
+        is_deleted: true,
+      }),
+      new DetailComment({
+        id: 'comment-123',
+        username: 'johndoe',
+        date: '12-30-2022',
+        content: 'sebuah comment',
+        is_deleted: false,
+      }),
+    ]));
 
     /* creating use case instance */
     const getThreadUseCase = new GetThreadUseCase({

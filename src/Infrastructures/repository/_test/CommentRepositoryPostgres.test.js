@@ -94,10 +94,9 @@ describe('CommentRepositoryPostgres', () => {
       };
 
       // Assert
+      const notFoundError = 'komentar tidak ditemukan atau id yang dimasukkan salah';
       await expect(repositoryPostgres.verifyCommentByThreadId({ ...errorRequest }))
-        .rejects.toThrow(NotFoundError);
-      await expect(repositoryPostgres.verifyCommentByThreadId({ ...errorRequest }))
-        .rejects.toThrowError('komentar tidak ditemukan atau id yang dimasukkan salah');
+        .rejects.toThrow(new NotFoundError(notFoundError));
     });
 
     it('shouldn\'t throw NotFoundError when the action is verified', async () => {
@@ -137,10 +136,9 @@ describe('CommentRepositoryPostgres', () => {
       const repositoryPostgres = new CommentRepositoryPostgres(pool, {});
 
       // Assert
+      const authorizationError = 'komentar tidak ditemukan atau owner salah';
       await expect(repositoryPostgres.verifyCommentOwner({ ...errorRequestPayload }))
-        .rejects.toThrow(AuthorizationError);
-      await expect(repositoryPostgres.verifyCommentOwner({ ...errorRequestPayload }))
-        .rejects.toThrowError('komentar tidak ditemukan atau owner salah');
+        .rejects.toThrow(new AuthorizationError(authorizationError));
     });
 
     it('shouldn\'t throw AuthorizationError when owner of the comments is valid', async () => {
@@ -182,8 +180,6 @@ describe('CommentRepositoryPostgres', () => {
       // Assert
       await expect(repositoryPostgres.verifyCommentNotDeleted(params.commentId))
         .resolves.not.toThrow(NotFoundError);
-      await expect(repositoryPostgres.verifyCommentNotDeleted(params.commentId))
-        .resolves.toBeUndefined();
     });
 
     it('should throw NotFoundError when comment has been deleted', async () => {
@@ -202,10 +198,9 @@ describe('CommentRepositoryPostgres', () => {
       const repositoryPostgres = new CommentRepositoryPostgres(pool, {});
 
       // Assert
+      const notFoundError = 'komentar tidak ada atau telah dihapus';
       await expect(repositoryPostgres.verifyCommentNotDeleted(params.commentId))
-        .rejects.toThrow(NotFoundError);
-      await expect(repositoryPostgres.verifyCommentNotDeleted(params.commentId))
-        .rejects.toThrowError('komentar tidak ada atau telah dihapus');
+        .rejects.toThrow(new NotFoundError(notFoundError));
     });
   });
 

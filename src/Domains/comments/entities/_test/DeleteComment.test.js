@@ -8,10 +8,11 @@ describe('a deleteComment entities', () => {
 
   it('should throw error when params did not contain needed property', () => {
     // Arrange
-    const { userId } = generateRequest();
+    const { params, userId } = generateRequest();
+    delete params.commentId;
 
     // Action and Assert
-    expect(() => new DeleteComment({}, userId))
+    expect(() => new DeleteComment(params, userId))
       .toThrowError('DELETE_COMMENT.PARAMS_NOT_CONTAIN_NEEDED_PROPERTY');
   });
 
@@ -20,7 +21,7 @@ describe('a deleteComment entities', () => {
     const { params } = generateRequest();
 
     // Action and Assert
-    expect(() => new DeleteComment({ ...params }, undefined))
+    expect(() => new DeleteComment(params, undefined))
       .toThrowError('DELETE_COMMENT.HEADERS_NOT_CONTAIN_NEEDED_PROPERTY');
   });
 
@@ -29,22 +30,21 @@ describe('a deleteComment entities', () => {
     const { params } = generateRequest();
 
     // Action and Assert
-    expect(() => new DeleteComment({ ...params }, 420))
+    expect(() => new DeleteComment(params, 420))
       .toThrowError('DELETE_COMMENT.HEADERS_NOT_MEET_DATA_TYPE_SPECIFICATION');
   });
 
   it('should take delete comment request object correctly', () => {
     // Arrange
+    /* duplicating data, to avoid Action affecting the value during its processes */
     const { params, userId } = generateRequest();
+    const { params: expectedParams, userId: expectedUserId } = generateRequest();
 
     // Action
-    const deleteCommentEntity = new DeleteComment({ ...params }, userId);
+    const deleteCommentEntity = new DeleteComment(params, userId);
 
     // Assert
-    expect({ ...deleteCommentEntity }).toStrictEqual({
-      threadId: 'thread-123',
-      commentId: 'comment-123',
-      userId: 'user-123',
-    });
+    expect(deleteCommentEntity).toMatchObject({ ...expectedParams, userId: expectedUserId });
+    expect(deleteCommentEntity).toStrictEqual(new DeleteComment(expectedParams, expectedUserId));
   });
 });

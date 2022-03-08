@@ -7,12 +7,14 @@ const AddCommentUseCase = require('../AddCommentUseCase');
 describe('AddCommentUseCase', () => {
   it('should orchestrating the add comment action correctly', async () => {
     // Arrange
-    const payload = { content: 'Content dari komentar' };
-    const params = { threadId: 'thread-123' };
     const userId = 'user-123';
+    const request = {
+      payload: { content: 'Content dari komentar' },
+      params: { threadId: 'thread-123' },
+    };
     const expectedPostedComment = new PostedComment({
       id: 'comment-123',
-      content: payload.content,
+      content: request.payload.content,
       owner: userId,
     });
 
@@ -21,14 +23,12 @@ describe('AddCommentUseCase', () => {
     const mockThreadRepository = new ThreadRepository();
 
     /* mocking needed function of the dependency */
-    mockThreadRepository.verifyThreadById = jest.fn()
-      .mockImplementation(() => Promise.resolve());
-    mockCommentRepository.addComment = jest.fn()
-      .mockImplementation(() => Promise.resolve(new PostedComment({
-        id: 'comment-123',
-        content: 'Content dari komentar',
-        owner: 'user-123',
-      })));
+    mockThreadRepository.verifyThreadById = jest.fn(() => Promise.resolve());
+    mockCommentRepository.addComment = jest.fn(() => Promise.resolve(new PostedComment({
+      id: 'comment-123',
+      content: 'Content dari komentar',
+      owner: 'user-123',
+    })));
 
     /* creating use case instance */
     const addCommentUseCase = new AddCommentUseCase({
@@ -37,13 +37,12 @@ describe('AddCommentUseCase', () => {
     });
 
     // Action
-    const request = { payload, params };
     const postComment = new PostComment(request, userId);
     const postedComment = await addCommentUseCase.execute(request, userId);
 
     // Assert
     expect(postedComment).toStrictEqual(expectedPostedComment);
-    expect(mockThreadRepository.verifyThreadById).toBeCalledWith(params.threadId);
-    expect(mockCommentRepository.addComment).toBeCalledWith({ ...postComment });
+    expect(mockThreadRepository.verifyThreadById).toBeCalledWith(request.params.threadId);
+    expect(mockCommentRepository.addComment).toBeCalledWith(postComment);
   });
 });

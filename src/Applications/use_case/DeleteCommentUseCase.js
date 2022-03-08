@@ -10,8 +10,8 @@ class DeleteCommentUseCase {
     const entity = new DeleteComment(params, userId);
 
     await this._threadRepository.verifyThreadById(entity.threadId);
-    await this._commentRepository.verifyCommentByThreadId({ ...entity });
-    await this._commentRepository.verifyCommentOwner({ ...entity });
+    await this._commentRepository.verifyCommentByThreadId(entity);
+    await this._commentRepository.verifyCommentOwner(entity);
     await this._commentRepository.verifyCommentNotDeleted(entity.commentId);
     await this._commentRepository.softDeleteById(entity.commentId);
   }
