@@ -1,5 +1,4 @@
 const DomainErrorTranslator = require('../DomainErrorTranslator');
-const AuthenticationError = require('../AuthenticationError');
 const InvariantError = require('../InvariantError');
 
 describe('DomainErrorTranslator', () => {
@@ -21,22 +20,6 @@ describe('DomainErrorTranslator', () => {
 
   it('should translate error correctly', () => {
     // Arrange
-    /* registering domain error message and its translated message */
-    const authenticationErrorMessage = [
-      {
-        message: 'POST_THREAD.HEADERS_NOT_CONTAIN_NEEDED_PROPERTY',
-        translate: 'Missing authentication',
-      },
-      {
-        message: 'POST_COMMENT.HEADERS_NOT_CONTAIN_NEEDED_PROPERTY',
-        translate: 'Missing authentication',
-      },
-      {
-        message: 'DELETE_COMMENT.HEADERS_NOT_CONTAIN_NEEDED_PROPERTY',
-        translate: 'Missing authentication',
-      },
-    ];
-
     const invariantErrorMessage = [
       {
         message: 'REGISTER_USER.NOT_CONTAIN_NEEDED_PROPERTY',
@@ -110,21 +93,13 @@ describe('DomainErrorTranslator', () => {
 
     // Action
     const invmap = ermapRegister(new Map(), invariantErrorMessage);
-    const autmap = ermapRegister(new Map(), authenticationErrorMessage);
     const spyTranslate = jest.spyOn(DomainErrorTranslator, DomainErrorTranslator.translate.name);
 
     // Assert
-    let calledTimes = invariantErrorMessage.length;
-    calledTimes += authenticationErrorMessage.length;
-
     invmap.forEach((httpError, domainError) => {
       expect(DomainErrorTranslator.translate(new Error(domainError)))
         .toStrictEqual(new InvariantError(httpError));
     });
-    autmap.forEach((httpError, domainError) => {
-      expect(DomainErrorTranslator.translate(new Error(domainError)))
-        .toStrictEqual(new AuthenticationError(httpError));
-    });
-    expect(spyTranslate).toBeCalledTimes(calledTimes);
+    expect(spyTranslate).toBeCalledTimes(invariantErrorMessage.length);
   });
 });

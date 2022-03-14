@@ -18,23 +18,24 @@ class DetailComment {
   }
 
   _verifyResponse(res) {
-    const allowedProperties = ['id', 'username', 'date', 'content'];
-    if (!res.id || !res.content || !res.username || !res.date || res.is_deleted === undefined) {
-      throw new Error('DETAIL_COMMENT.NOT_CONTAIN_NEEDED_PROPERTY');
-    }
+    const propertyError = 'DETAIL_COMMENT.RESPONSES_NOT_CONTAIN_NEEDED_PROPERTY';
+    const propertyIsDeletedTypeError = 'DETAIL_COMMENT.PROPERTY_IS_DELETED_NOT_MEET_DATA_TYPE_SPECIFICATION';
+    const propertyIsNotStringTypeError = 'DETAIL_COMMENT.RESPONSES_NOT_MEET_DATA_TYPE_SPECIFICATION';
 
-    if (typeof res.is_deleted !== 'boolean') {
-      throw new Error('DETAIL_COMMENT.IS_DELETED_NOT_MEET_DATA_TYPE_SPECIFICATION');
-    }
+    const isPropertyError = res.is_deleted === undefined
+      || !res.id
+      || !res.content
+      || !res.username
+      || !res.date;
+    const isDeletedTypeError = typeof res.is_deleted !== 'boolean';
+    const isNotStringTypeError = typeof res.id !== 'string'
+      || typeof res.content !== 'string'
+      || typeof res.username !== 'string'
+      || typeof res.date !== 'string';
 
-    const keys = Object.keys(res);
-    keys.forEach((key) => {
-      if (allowedProperties.indexOf(key) > -1) {
-        if (typeof res[key] !== 'string') {
-          throw new Error('DETAIL_COMMENT.NOT_MEET_DATA_TYPE_SPECIFICATION');
-        }
-      }
-    });
+    if (isPropertyError) throw new Error(propertyError);
+    if (isDeletedTypeError) throw new Error(propertyIsDeletedTypeError);
+    if (isNotStringTypeError) throw new Error(propertyIsNotStringTypeError);
   }
 }
 

@@ -1,5 +1,4 @@
 /* istanbul ignore file */
-const date = Date;
 const { createContainer } = require('instances-container');
 
 // external agency
@@ -71,9 +70,6 @@ container.register([
           concrete: pool,
         },
         {
-          concrete: date,
-        },
-        {
           concrete: nanoid,
         },
       ],
@@ -86,9 +82,6 @@ container.register([
       dependencies: [
         {
           concrete: pool,
-        },
-        {
-          concrete: date,
         },
         {
           concrete: nanoid,
@@ -198,15 +191,9 @@ container.register([
     key: AddThreadUseCase.name,
     Class: AddThreadUseCase,
     parameter: {
-      injectType: 'destructuring',
       dependencies: [
         {
-          name: 'threadRepository',
           internal: ThreadRepository.name,
-        },
-        {
-          name: 'authTokenManager',
-          internal: AuthenticationTokenManager.name,
         },
       ],
     },
@@ -225,10 +212,6 @@ container.register([
           name: 'threadRepository',
           internal: ThreadRepository.name,
         },
-        {
-          name: 'authTokenManager',
-          internal: AuthenticationTokenManager.name,
-        },
       ],
     },
   },
@@ -245,10 +228,6 @@ container.register([
         {
           name: 'threadRepository',
           internal: ThreadRepository.name,
-        },
-        {
-          name: 'authTokenManager',
-          internal: AuthenticationTokenManager.name,
         },
       ],
     },

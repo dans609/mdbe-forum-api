@@ -1,6 +1,4 @@
 /* eslint-disable camelcase */
-exports.shorthands = undefined;
-
 exports.up = (pgm) => {
   pgm.createTable('comments', {
     id: {
@@ -20,8 +18,9 @@ exports.up = (pgm) => {
       notNull: true,
     },
     date: {
-      type: 'VARCHAR(50)',
+      type: 'timestamp',
       notNull: true,
+      default: pgm.func('current_timestamp'),
     },
     is_deleted: {
       type: 'BOOLEAN',

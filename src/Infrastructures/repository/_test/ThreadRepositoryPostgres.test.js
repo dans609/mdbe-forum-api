@@ -1,12 +1,12 @@
 const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
 const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
+const NotFoundError = require('../../../Commons/exceptions/NotFoundError');
 const PostThread = require('../../../Domains/threads/entities/PostThread');
 const PostedThread = require('../../../Domains/threads/entities/PostedThread');
 const GetThread = require('../../../Domains/threads/entities/GetThread');
 const DetailThread = require('../../../Domains/threads/entities/DetailThread');
 const pool = require('../../database/postgres/pool');
 const ThreadRepositoryPostgres = require('../ThreadRepositoryPostgres');
-const NotFoundError = require('../../../Commons/exceptions/NotFoundError');
 
 describe('ThreadRepositoryPostgres', () => {
   afterEach(async () => {
@@ -21,17 +21,16 @@ describe('ThreadRepositoryPostgres', () => {
   describe('addThread function', () => {
     it('should persist post thread', async () => {
       // Arrange
-      await UsersTableTestHelper.addUser({ username: 'dicoding' });
-      const payload = { id: 'user-123', title: 'Thread Title', body: 'Thread body' };
-      const headers = { authorization: 'Bearer token-123' };
-      const postThread = new PostThread(payload, headers.authorization);
+      const payload = { title: 'Thread Title', body: 'Thread body' };
+      const userId = 'user-123';
+      const postThread = new PostThread(payload, userId);
+      await UsersTableTestHelper.addUser({ username: 'dicoding', id: userId });
 
-      function date() { this.toISOString = () => '12-30-2022'; }
       const fakeIdGenerator = () => '123';
-      const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, date, fakeIdGenerator);
+      const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, fakeIdGenerator);
 
       // Action
-      await threadRepositoryPostgres.addThread({ ...postThread, owner: payload.id });
+      await threadRepositoryPostgres.addThread({ ...postThread });
 
       // Assert
       const threads = await ThreadsTableTestHelper.findThreadById('thread-123');
@@ -40,19 +39,16 @@ describe('ThreadRepositoryPostgres', () => {
 
     it('should return posted thread correctly', async () => {
       // Arrange
+      const payload = { title: 'Thread Title', body: 'Thread body' };
+      const userId = 'user-123';
+      const postThread = new PostThread(payload, userId);
       await UsersTableTestHelper.addUser({ username: 'dicoding' });
-      const payload = { id: 'user-123', title: 'Thread Title', body: 'Thread body' };
-      const headers = { authorization: 'Bearer token-123' };
-      const postThread = new PostThread(payload, headers.authorization);
 
-      function date() { this.toISOString = () => '12-30-2022'; }
       const fakeIdGenerator = () => '123';
-      const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, date, fakeIdGenerator);
+      const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, fakeIdGenerator);
 
       // Action
-      const postedThread = await threadRepositoryPostgres.addThread({
-        ...postThread, owner: payload.id,
-      });
+      const postedThread = await threadRepositoryPostgres.addThread({ ...postThread });
 
       // Assert
       expect(postedThread).toStrictEqual(new PostedThread({
@@ -66,6 +62,7 @@ describe('ThreadRepositoryPostgres', () => {
   describe('getThreadById function', () => {
     it('should return detail thread correctly', async () => {
       // Arrange
+      const date = (new Date()).toISOString();
       const { threadId } = new GetThread({ threadId: 'thread-123' });
       const userId = 'user-123';
       const responses = {
@@ -73,20 +70,26 @@ describe('ThreadRepositoryPostgres', () => {
         title: 'Thread Title',
         body: 'Thread body',
         username: 'dicoding',
-        date: '12-29-2022',
+        date,
       };
       const expectedDetailThread = new DetailThread(responses);
 
       /* add required data to database and create repository instance */
       await UsersTableTestHelper.addUser({ id: userId, username: 'dicoding' });
       await ThreadsTableTestHelper.addThreads({ ...expectedDetailThread, owner: userId });
-      const threadRepoPostgres = new ThreadRepositoryPostgres(pool, {}, {});
+      const repositoryPostgres = new ThreadRepositoryPostgres(pool, {});
 
       // Action
-      const detailThread = await threadRepoPostgres.getThreadById(threadId);
+      const detailThread = await repositoryPostgres.getThreadById(threadId);
 
       // Assert
-      expect(detailThread).toStrictEqual(expectedDetailThread);
+      expect(detailThread).toBeInstanceOf(DetailThread);
+      expect(detailThread.id).toStrictEqual(expectedDetailThread.id);
+      expect(detailThread.title).toStrictEqual(expectedDetailThread.title);
+      expect(detailThread.body).toStrictEqual(expectedDetailThread.body);
+      expect(detailThread.username).toStrictEqual(expectedDetailThread.username);
+      expect(detailThread.date).toBeTruthy();
+      expect(typeof detailThread.date).toStrictEqual('string');
     });
   });
 
@@ -95,7 +98,7 @@ describe('ThreadRepositoryPostgres', () => {
       // Arrange
       await UsersTableTestHelper.addUser({ username: 'dicoding' });
       await ThreadsTableTestHelper.addThreads({ id: 'thread-123' });
-      const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, {}, {});
+      const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, {});
 
       // Action and Assert
       await expect(threadRepositoryPostgres.verifyThreadById('thread-abc'))
@@ -110,7 +113,7 @@ describe('ThreadRepositoryPostgres', () => {
       // Arrange
       await UsersTableTestHelper.addUser({ username: 'dicoding' });
       await ThreadsTableTestHelper.addThreads({ id: 'thread-123' });
-      const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, {}, {});
+      const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, {});
 
       // Action and Assert
       await expect(threadRepositoryPostgres.verifyThreadById('thread-123'))
