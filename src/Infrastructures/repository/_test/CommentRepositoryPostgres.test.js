@@ -6,12 +6,18 @@ const PostComment = require('../../../Domains/comments/entities/PostComment');
 const PostedComment = require('../../../Domains/comments/entities/PostedComment');
 const DeleteComment = require('../../../Domains/comments/entities/DeleteComment');
 const DetailComment = require('../../../Domains/comments/entities/DetailComment');
+const CommentRepository = require('../../../Domains/comments/CommentRepository');
 const AuthorizationError = require('../../../Commons/exceptions/AuthorizationError');
 const NotFoundError = require('../../../Commons/exceptions/NotFoundError');
 const pool = require('../../database/postgres/pool');
 const CommentRepositoryPostgres = require('../CommentRepositoryPostgres');
 
 describe('CommentRepositoryPostgres', () => {
+  it('should be instanceof CommentRepository interface', () => {
+    const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {});
+    expect(commentRepositoryPostgres).toBeInstanceOf(CommentRepository);
+  });
+
   beforeAll(() => {
     const payload = { content: 'Content dari komentar' };
     const params = { threadId: 'thread-123', commentId: 'comment-123' };
@@ -250,7 +256,7 @@ describe('CommentRepositoryPostgres', () => {
       const detailComment = await commentRepositoryPostgres.getCommentsByThreadId(thread.id);
 
       // Assert
-      expect(detailComment).toBeDefined();
+      expect(detailComment).toBeTruthy();
       expect(detailComment).toHaveLength(0);
     });
 

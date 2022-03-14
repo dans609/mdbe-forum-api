@@ -1,11 +1,17 @@
 const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
 const InvariantError = require('../../../Commons/exceptions/InvariantError');
+const UserRepository = require('../../../Domains/users/UserRepository');
 const RegisterUser = require('../../../Domains/users/entities/RegisterUser');
 const RegisteredUser = require('../../../Domains/users/entities/RegisteredUser');
 const pool = require('../../database/postgres/pool');
 const UserRepositoryPostgres = require('../UserRepositoryPostgres');
 
 describe('UserRepositoryPostgres', () => {
+  it('should be instanceof UserRepository interface', () => {
+    const userRepositoryPostgres = new UserRepositoryPostgres(pool, {});
+    expect(userRepositoryPostgres).toBeInstanceOf(UserRepository);
+  });
+
   afterEach(async () => {
     await UsersTableTestHelper.cleanTable();
   });

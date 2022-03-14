@@ -1,4 +1,5 @@
 const ServerTestHelper = require('../../../../tests/ServerTestHelper');
+const LikesTableTestHelper = require('../../../../tests/LikesTableTestHelper');
 const CommentsTableTestHelper = require('../../../../tests/CommentsTableTestHelper');
 const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
 const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
@@ -12,6 +13,7 @@ describe('/threads endpoint', () => {
     await ThreadsTableTestHelper.cleanTable();
     await UsersTableTestHelper.cleanTable();
     await CommentsTableTestHelper.cleanTable();
+    await LikesTableTestHelper.cleanTable();
   });
 
   afterAll(async () => {
@@ -23,7 +25,7 @@ describe('/threads endpoint', () => {
       // Arrange
       const requestPayload = { title: 'Thread Title', body: 'Thread body' };
       const server = await createServer(container);
-      const serverHelper = await ServerTestHelper.startService(server);
+      const serverHelper = await ServerTestHelper.init(server).injectUser('dicoding');
 
       // Action
       const response = await server.inject({
@@ -51,7 +53,7 @@ describe('/threads endpoint', () => {
       // Arrange
       const requestPayload = { title: 'Thread Title' };
       const server = await createServer(container);
-      const serverHelper = await ServerTestHelper.startService(server);
+      const serverHelper = await ServerTestHelper.init(server).injectUser('dicoding');
 
       // Action
       const response = await server.inject({
@@ -76,7 +78,7 @@ describe('/threads endpoint', () => {
       // Arrange
       const requestPayload = { title: 123, body: true };
       const server = await createServer(container);
-      const serverHelper = await ServerTestHelper.startService(server);
+      const serverHelper = await ServerTestHelper.init(server).injectUser('johndoe');
 
       // Action
       const response = await server.inject({
@@ -120,17 +122,52 @@ describe('/threads endpoint', () => {
   describe('when GET /threads/{threadId}', () => {
     it('should response 200 and persisted detail thread', async () => {
       // Arrange
-      const server = await createServer(container);
-      const firstUser = await ServerTestHelper.startService(server);
-      await firstUser.injectThread({ threadTitle: 'Thread Title' });
-      await firstUser.injectComment({ content: 'Sebuah komentar' });
-      await firstUser.injectComment({ content: 'Content dari komentar' });
-      await firstUser.deleteLastComment();
+      const threadPayload = { title: 'Thread Title', body: 'Thread body' };
 
-      /* add more user and comment that belong to the firstUser thread */
-      const serverHelper = firstUser.changeUsername('johndoe');
-      const secondUser = await serverHelper.startService(server);
-      await secondUser.injectComment({ content: 'Hello world' });
+      /* create server and initialize helper */
+      const server = await createServer(container);
+      const serverHelper = ServerTestHelper.init(server);
+
+      /* adding new user and let this user to be the thread owner */
+      const firstUser = await serverHelper.injectUser('dicoding', true)
+        .then((instance) => instance.injectThread(threadPayload))
+        .then((instance) => instance.injectComment('Sebuah komentar', true))
+        .then((instance) => instance.likeLastComment()) // user like his comment [c1=1]
+        .then((instance) => instance.injectComment('Content dari komentar', true))
+        .then((instance) => instance.likeLastComment()) // user like his comment [c2=1]
+        .then((instance) => instance.deleteLastComment());
+
+      /**
+       * Add another user and make this user to post comments in @firstUser thread
+       * then unlike comment of this user
+       */
+      await serverHelper.injectUser('johndoe', true)
+        .then((instance) => instance.injectComment('Hello world', true))
+        .then((instance) => instance.likeLastComment()) // this user like his own comment [c3=1]
+        .then((instance) => instance.likeLastComment()); // this user unlike his comment [c3=0]
+
+      /**
+       * Add more users, the task of this users is just to like the comments
+       * which has been posted before in the @firstUser thread
+       */
+      await serverHelper.injectUser('dans', true);
+      await serverHelper.injectUser('jake', true);
+
+      /* get required data from helper to inject another request which needs these data */
+      const listTokens = serverHelper.getListTokens();
+      const listCommentId = serverHelper.getSavedId('comment');
+      const threadId = serverHelper.addedThread.id;
+
+      /** @secondUser to @fourthUser liked the first comment which posted by @firstUser */
+      const firstComment = listCommentId[0];
+      const lastComment = listCommentId[2];
+      await serverHelper.injectLike({ commentId: firstComment, threadId, token: listTokens[1] });
+      await serverHelper.injectLike({ commentId: firstComment, threadId, token: listTokens[2] });
+      await serverHelper.injectLike({ commentId: firstComment, threadId, token: listTokens[3] });
+
+      /** @firstUser and @thirdUser liked third comment (last comment), posted by @secondUser */
+      await serverHelper.injectLike({ commentId: lastComment, threadId, token: listTokens[0] });
+      await serverHelper.injectLike({ commentId: lastComment, threadId, token: listTokens[2] });
 
       // Action
       const response = await server.inject({
@@ -141,11 +178,13 @@ describe('/threads endpoint', () => {
       /* get all required data which have been posted to database */
       const thread = (await ThreadsTableTestHelper.findThreadById(serverHelper.addedThread.id))[0];
       const user = (await UsersTableTestHelper.findUsersById(thread.owner))[0];
+      const likes = await LikesTableTestHelper.getAllLikesInThread(thread.id);
       const comments = (await getAllCommentsInThread(thread.id)).map((c) => ({
         id: c.id,
         username: c.username,
         date: c.date.toISOString(),
         content: (c.is_deleted) ? '**komentar telah dihapus**' : c.content,
+        likeCount: likes.filter((like) => like.comment_id === c.id).length,
       }));
 
       // Assert
@@ -165,8 +204,8 @@ describe('/threads endpoint', () => {
 
     it('should response 200 but with an empty array of comments', async () => {
       const server = await createServer(container);
-      const serverHelper = await ServerTestHelper.startService(server);
-      await serverHelper.injectThread({ threadTitle: 'Thread Title' });
+      const serverHelper = await ServerTestHelper.init(server).injectUser('dicoding')
+        .then((helper) => helper.injectThread({ title: 'Thread Title', body: 'Thread body' }));
 
       // Arrange
       const response = await server.inject({
@@ -189,7 +228,7 @@ describe('/threads endpoint', () => {
     it('should response 404 when threadId is not exist', async () => {
       const params = { threadId: 'thread-123' };
       const server = await createServer(container);
-      await ServerTestHelper.startService(server);
+      await ServerTestHelper.init(server).injectUser('dicoding');
 
       // Action
       const response = await server.inject({
