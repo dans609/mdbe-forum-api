@@ -2,10 +2,10 @@ const CommentsTableTestHelper = require('../../../../tests/CommentsTableTestHelp
 const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
 const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
 const RequestTestHelper = require('../../../../tests/RequestTestHelper');
+const ServerTestHelper = require('../../../../tests/ServerTestHelper');
 const pool = require('../../database/postgres/pool');
 const container = require('../../container');
 const createServer = require('../createServer');
-const ServerTestHelper = require('../../../../tests/ServerTestHelper');
 
 describe('/threads/{threadId}/comments endpoint', () => {
   beforeAll(() => {
@@ -35,8 +35,8 @@ describe('/threads/{threadId}/comments endpoint', () => {
       // Arrange
       const { payload } = RequestTestHelper;
       const server = await createServer(container);
-      const serverHelper = await ServerTestHelper.startService(server);
-      await serverHelper.injectThread({ threadTitle: 'Thread Title' });
+      const serverHelper = await ServerTestHelper.init(server).injectUser('dicoding')
+        .then((helper) => helper.injectThread({ title: 'Thread Title', body: 'Thread body' }));
 
       // Action
       const response = await server.inject({
@@ -68,7 +68,7 @@ describe('/threads/{threadId}/comments endpoint', () => {
       // Arrange
       const { payload: requestPayload, params } = RequestTestHelper;
       const server = await createServer(container);
-      const serverHelper = await ServerTestHelper.startService(server);
+      const serverHelper = await ServerTestHelper.init(server).injectUser('dicoding');
       await ThreadsTableTestHelper.addThreads({ owner: serverHelper.userId });
 
       // Action
@@ -94,7 +94,7 @@ describe('/threads/{threadId}/comments endpoint', () => {
       // Arrange
       const { threadId } = RequestTestHelper.params;
       const server = await createServer(container);
-      const serverHelper = await ServerTestHelper.startService(server);
+      const serverHelper = await ServerTestHelper.init(server).injectUser('dicoding');
       await ThreadsTableTestHelper.addThreads({ owner: serverHelper.userId });
 
       // Action
@@ -120,7 +120,7 @@ describe('/threads/{threadId}/comments endpoint', () => {
       // Arrange
       const { payload, params } = RequestTestHelper;
       const server = await createServer(container);
-      const serverHelper = await ServerTestHelper.startService(server);
+      const serverHelper = await ServerTestHelper.init(server).injectUser('dicoding');
       await ThreadsTableTestHelper.addThreads({ owner: serverHelper.userId });
 
       // Action
@@ -146,7 +146,7 @@ describe('/threads/{threadId}/comments endpoint', () => {
       // Arrange
       const { payload, params } = RequestTestHelper;
       const server = await createServer(container);
-      const serverHelper = await ServerTestHelper.startService(server);
+      const serverHelper = await ServerTestHelper.init(server).injectUser('dicoding');
       await ThreadsTableTestHelper.addThreads({ owner: serverHelper.userId });
 
       // Action
@@ -169,12 +169,12 @@ describe('/threads/{threadId}/comments endpoint', () => {
       // Arrange
       const { payload } = RequestTestHelper;
       const server = await createServer(container);
-      const serverHelper = await ServerTestHelper.startService(server);
-      await serverHelper.injectThread({ threadTitle: 'Thread Title' });
-      await serverHelper.injectComment({ content: payload.content });
+      const serverHelper = await ServerTestHelper.init(server).injectUser('dicoding')
+        .then((helper) => helper.injectThread({ title: 'Thread Title', body: 'Thread body' }))
+        .then((helper) => helper.injectComment(payload.content));
 
       // Action
-      const { accessToken, addedThread, addedComment } = ServerTestHelper;
+      const { accessToken, addedThread, addedComment } = serverHelper;
       const response = await server.inject({
         method: 'DELETE',
         url: `/threads/${addedThread.id}/comments/${addedComment.id}`,
@@ -193,12 +193,12 @@ describe('/threads/{threadId}/comments endpoint', () => {
       // Arrange
       const { payload } = RequestTestHelper;
       const server = await createServer(container);
-      const serverHelper = await ServerTestHelper.startService(server);
-      await serverHelper.injectThread({ threadTitle: 'Thread Title' });
-      await serverHelper.injectComment({ content: payload.content });
+      const serverHelper = await ServerTestHelper.init(server).injectUser('dicoding')
+        .then((helper) => helper.injectThread({ title: 'Thread Title', body: 'Thread body' }))
+        .then((helper) => helper.injectComment(payload.content));
 
       // Action
-      const { accessToken, addedThread, addedComment } = ServerTestHelper;
+      const { accessToken, addedThread, addedComment } = serverHelper;
       await server.inject({
         method: 'DELETE',
         url: `/threads/${addedThread.id}/comments/${addedComment.id}`,
@@ -227,7 +227,7 @@ describe('/threads/{threadId}/comments endpoint', () => {
       // Arrange
       const { errorThreadId, threadId, commentId } = RequestTestHelper.params;
       const server = await createServer(container);
-      const serverHelper = await ServerTestHelper.startService(server);
+      const serverHelper = await ServerTestHelper.init(server).injectUser('dicoding');
       await ThreadsTableTestHelper.addThreads({ id: threadId, owner: serverHelper.userId });
       await CommentsTableTestHelper.addComment({
         threadId,
@@ -257,7 +257,7 @@ describe('/threads/{threadId}/comments endpoint', () => {
       // Arrange
       const { errorCommentId, threadId, commentId } = RequestTestHelper.params;
       const server = await createServer(container);
-      const serverHelper = await ServerTestHelper.startService(server);
+      const serverHelper = await ServerTestHelper.init(server).injectUser('dicoding');
       await ThreadsTableTestHelper.addThreads({ id: threadId, owner: serverHelper.userId });
       await CommentsTableTestHelper.addComment({
         threadId,
@@ -292,7 +292,7 @@ describe('/threads/{threadId}/comments endpoint', () => {
         errorCommentId: secondCommentId,
       } = RequestTestHelper.params;
       const server = await createServer(container);
-      const firstUser = await ServerTestHelper.startService(server);
+      const firstUser = await ServerTestHelper.init(server).injectUser('dicoding');
       await ThreadsTableTestHelper.addThreads({ id: threadId, owner: firstUser.userId });
       await CommentsTableTestHelper.addComment({
         threadId,
@@ -302,8 +302,7 @@ describe('/threads/{threadId}/comments endpoint', () => {
 
       // Action
       /* pre-requisites */
-      const serverHelper = ServerTestHelper.changeUsername('dans');
-      const secondUser = await serverHelper.startService(server);
+      const secondUser = await firstUser.injectUser('dans');
       await ThreadsTableTestHelper.addThreads({ id: secondThreadId, owner: secondUser.userId });
       await CommentsTableTestHelper.addComment({
         id: secondCommentId,
@@ -332,7 +331,7 @@ describe('/threads/{threadId}/comments endpoint', () => {
     it('should response 401 when request not contain authorization token headers', async () => {
       const { threadId, commentId } = RequestTestHelper.params;
       const server = await createServer(container);
-      const serverHelper = await ServerTestHelper.startService(server);
+      const serverHelper = await ServerTestHelper.init(server).injectUser('dicoding');
       await ThreadsTableTestHelper.addThreads({ id: threadId, owner: serverHelper.userId });
       await CommentsTableTestHelper.addComment({
         threadId,

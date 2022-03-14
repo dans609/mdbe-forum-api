@@ -1,6 +1,7 @@
 const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
 const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
 const NotFoundError = require('../../../Commons/exceptions/NotFoundError');
+const ThreadRepository = require('../../../Domains/threads/ThreadRepository');
 const PostThread = require('../../../Domains/threads/entities/PostThread');
 const PostedThread = require('../../../Domains/threads/entities/PostedThread');
 const GetThread = require('../../../Domains/threads/entities/GetThread');
@@ -9,6 +10,11 @@ const pool = require('../../database/postgres/pool');
 const ThreadRepositoryPostgres = require('../ThreadRepositoryPostgres');
 
 describe('ThreadRepositoryPostgres', () => {
+  it('should be instanceof ThreadRepository interface', () => {
+    const threadRepository = new ThreadRepositoryPostgres(pool, {});
+    expect(threadRepository).toBeInstanceOf(ThreadRepository);
+  });
+
   afterEach(async () => {
     await ThreadsTableTestHelper.cleanTable();
     await UsersTableTestHelper.cleanTable();

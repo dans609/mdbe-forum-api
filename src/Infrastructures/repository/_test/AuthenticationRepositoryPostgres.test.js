@@ -1,9 +1,15 @@
-const InvariantError = require('../../../Commons/exceptions/InvariantError');
 const AuthenticationsTableTestHelper = require('../../../../tests/AuthenticationsTableTestHelper');
+const InvariantError = require('../../../Commons/exceptions/InvariantError');
+const AuthenticationRepository = require('../../../Domains/authentications/AuthenticationRepository');
 const pool = require('../../database/postgres/pool');
 const AuthenticationRepositoryPostgres = require('../AuthenticationRepositoryPostgres');
 
 describe('AuthenticationRepository postgres', () => {
+  it('should be instanceof AuthenticationRepository interface', () => {
+    const authenticationRepository = new AuthenticationRepositoryPostgres(pool);
+    expect(authenticationRepository).toBeInstanceOf(AuthenticationRepository);
+  });
+
   afterEach(async () => {
     await AuthenticationsTableTestHelper.cleanTable();
   });
