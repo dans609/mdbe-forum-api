@@ -22,8 +22,10 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - name: npm install migrate and test
       run: |
-        npm install
+        npm install @hapi/hapi @hapi/jwt bcrypt dotenv nanoid pg instances-container
+        npm install @types/jest eslint jest node-pg-migrate nodemon --save-dev
         npm run migrate up
+        npm run migrate:test up
         npm run test
       env:
         CI: true
