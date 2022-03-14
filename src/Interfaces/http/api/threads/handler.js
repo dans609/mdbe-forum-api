@@ -4,14 +4,15 @@ const GetThreadUseCase = require('../../../../Applications/use_case/GetThreadUse
 class ThreadsHandler {
   constructor(container) {
     this._container = container;
+
     this.postThreadHandler = this.postThreadHandler.bind(this);
     this.getThreadHandler = this.getThreadHandler.bind(this);
   }
 
   async postThreadHandler(request, h) {
-    const headerAuth = request.headers.authorization;
+    const { id: userId } = request.auth.credentials;
     const addThreadUseCase = this._container.getInstance(AddThreadUseCase.name);
-    const addedThread = await addThreadUseCase.execute(request.payload, headerAuth);
+    const addedThread = await addThreadUseCase.execute(request.payload, userId);
 
     const response = h.response({
       status: 'success',

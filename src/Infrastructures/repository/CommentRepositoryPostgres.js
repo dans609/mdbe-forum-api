@@ -5,19 +5,17 @@ const DetailComment = require('../../Domains/comments/entities/DetailComment');
 const PostedComment = require('../../Domains/comments/entities/PostedComment');
 
 class CommentRepositoryPostgres extends CommentRepository {
-  constructor(pool, date, idGenerator) {
+  constructor(pool, idGenerator) {
     super();
     this._pool = pool;
-    this._date = date;
     this._idGenerator = idGenerator;
   }
 
-  async addComment({ threadId, content, owner }) {
+  async addComment({ threadId, content, userId: owner }) {
     const id = `comment-${this._idGenerator()}`;
-    const date = new this._date().toISOString();
     const query = {
-      text: 'INSERT INTO comments VALUES($1, $2, $3, $4, $5) RETURNING id, content, owner',
-      values: [id, threadId, content, owner, date],
+      text: 'INSERT INTO comments VALUES($1, $2, $3, $4) RETURNING id, content, owner',
+      values: [id, threadId, content, owner],
     };
 
     const result = await this._pool.query(query);
@@ -49,7 +47,9 @@ class CommentRepositoryPostgres extends CommentRepository {
     };
 
     const result = await this._pool.query(query);
-    return result.rows.map((row) => new DetailComment({ ...row }));
+    return result.rows.map((row) => new DetailComment({
+      ...row, date: row.date.toISOString(),
+    }));
   }
 
   async verifyCommentNotDeleted(commentId) {
@@ -65,10 +65,7 @@ class CommentRepositoryPostgres extends CommentRepository {
 
   async verifyCommentByThreadId({ commentId, threadId }) {
     const query = {
-      text: ` SELECT comments.id, threads.id
-              FROM comments
-              INNER JOIN threads ON comments.thread_id = threads.id
-              WHERE comments.id = $1 AND threads.id = $2`,
+      text: 'SELECT id, thread_id FROM comments WHERE id = $1 AND thread_id = $2',
       values: [commentId, threadId],
     };
 
@@ -78,12 +75,9 @@ class CommentRepositoryPostgres extends CommentRepository {
     }
   }
 
-  async verifyCommentOwner({ commentId, owner }) {
+  async verifyCommentOwner({ commentId, userId: owner }) {
     const query = {
-      text: ` SELECT comments.id, users.id
-              FROM comments
-              INNER JOIN users ON comments.owner = users.id
-              WHERE comments.id = $1 AND users.id = $2`,
+      text: 'SELECT id, owner FROM comments WHERE id = $1 AND owner = $2',
       values: [commentId, owner],
     };
 

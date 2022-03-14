@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 const ServerTestHelper = require('../../../../tests/ServerTestHelper');
 const CommentsTableTestHelper = require('../../../../tests/CommentsTableTestHelper');
 const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
@@ -113,34 +112,8 @@ describe('/threads endpoint', () => {
       // Assert
       const responseJson = JSON.parse(response.payload);
       expect(response.statusCode).toEqual(401);
-      expect(responseJson).toMatchObject({
-        status: 'fail',
-        message: 'Missing authentication',
-      });
-    });
-
-    it('should response 400 when authorization token headers not meet data type specification', async () => {
-      // Arrange
-      const requestPayload = { title: 'Thread Title', body: 'Thread body' };
-      const server = await createServer(container);
-
-      // Action
-      const response = await server.inject({
-        method: 'POST',
-        url: '/threads',
-        payload: requestPayload,
-        headers: {
-          Authorization: true,
-        },
-      });
-
-      // Assert
-      const responseJson = JSON.parse(response.payload);
-      expect(response.statusCode).toEqual(400);
-      expect(responseJson).toMatchObject({
-        status: 'fail',
-        message: 'tidak dapat membuat thread baru karena tipe data authorization token headers tidak sesuai',
-      });
+      expect(responseJson).toBeInstanceOf(Object);
+      expect(responseJson.message).toStrictEqual('Missing authentication');
     });
   });
 
@@ -154,9 +127,6 @@ describe('/threads endpoint', () => {
       await firstUser.injectComment({ content: 'Content dari komentar' });
       await firstUser.deleteLastComment();
 
-      /* get the id of the deleted comment */
-      const deletedCommentId = firstUser.addedComment.id;
-
       /* add more user and comment that belong to the firstUser thread */
       const serverHelper = firstUser.changeUsername('johndoe');
       const secondUser = await serverHelper.startService(server);
@@ -168,14 +138,14 @@ describe('/threads endpoint', () => {
         url: `/threads/${serverHelper.addedThread.id}`,
       });
 
-      /* getting all required data that have been posted to database */
-      const thread = await ThreadsTableTestHelper.findThreadById(serverHelper.addedThread.id);
-      const user = await UsersTableTestHelper.findUsersById(thread[0].owner);
-      const comments = (await getAllCommentsInThread(thread[0].id)).map((c) => ({
+      /* get all required data which have been posted to database */
+      const thread = (await ThreadsTableTestHelper.findThreadById(serverHelper.addedThread.id))[0];
+      const user = (await UsersTableTestHelper.findUsersById(thread.owner))[0];
+      const comments = (await getAllCommentsInThread(thread.id)).map((c) => ({
         id: c.id,
         username: c.username,
-        date: c.date,
-        content: (c.id === deletedCommentId) ? '**komentar telah dihapus**' : c.content,
+        date: c.date.toISOString(),
+        content: (c.is_deleted) ? '**komentar telah dihapus**' : c.content,
       }));
 
       // Assert
@@ -183,12 +153,12 @@ describe('/threads endpoint', () => {
       expect(response.statusCode).toEqual(200);
       expect(responseJson.status).toEqual('success');
       expect(responseJson.data.thread).toBeDefined();
-      expect(responseJson.data.thread).toMatchObject({
+      expect(responseJson.data.thread).toStrictEqual({
         id: firstUser.addedThread.id,
         title: firstUser.addedThread.title,
-        body: thread[0].body,
-        date: thread[0].date,
-        username: user[0].username,
+        body: thread.body,
+        date: thread.date.toISOString(),
+        username: user.username,
         comments,
       });
     });

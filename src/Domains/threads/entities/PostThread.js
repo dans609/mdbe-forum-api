@@ -1,11 +1,11 @@
 class PostThread {
-  constructor(payload, authorization) {
+  constructor(payload, userId) {
     this._verifyPayload(payload);
-    this._verifyAuth(authorization);
+    this._verifyId(userId);
 
     this.title = payload.title;
     this.body = payload.body;
-    this.authToken = authorization;
+    this.userId = userId;
   }
 
   _verifyPayload({ title, body }) {
@@ -18,12 +18,12 @@ class PostThread {
     }
   }
 
-  _verifyAuth(authorization) {
-    if (!authorization) {
+  _verifyId(userId) {
+    if (!userId) {
       throw new Error('POST_THREAD.HEADERS_NOT_CONTAIN_NEEDED_PROPERTY');
     }
 
-    if (typeof authorization !== 'string') {
+    if (typeof userId !== 'string') {
       throw new Error('POST_THREAD.HEADERS_NOT_MEET_DATA_TYPE_SPECIFICATION');
     }
   }
