@@ -2,7 +2,7 @@
 ## Instructions:
 1. Install node.js from its official website or using command line.
 2. Install PostgresSQL.
-3. [Optional] You can install your favourite programming-language text editor (e.g Visual Studio Code, Atom, Sublime Text, Notepad++) or you can use the default text editor of your computer.
+3. [Optional] You can install your favourite programming-language text editor (e.g Visual Studio Code, Atom, Sublime Text, Notepad++) or you can use the default text editor on your computer.
 4. Next, open the terminal in your computer, point to the location/path of this project which you have been downloaded/clone.
 5. Install the required dependencies with this command: **npm install**.
 6. After you success to install the dependencies, next step you should to create your own **.env** file which based on the **.env.sample** template or you can change the extension of **.env.sample** to **.env**.
